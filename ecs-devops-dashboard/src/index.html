@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>阿里云ECS可观测平台</title>
+  <base href="/">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <link rel="stylesheet" href="https://g.alicdn.com/aliyun-ecs/ecs-core/1.30.7/index.css">
+</head>
+
+<body>
+
+<script src="https://o.alicdn.com/aliyun-ecs/atom-static-loader/loader.js"></script>
+<script src="https://lang.alicdn.com/mcms/ecs-console-diagnostic/0.0.16/ecs-console-diagnostic_zh-cn.json"></script>
+<script src="https://lang.alicdn.com/mcms/ecs-core-stable/0.0.91/ecs-core-stable_zh-cn.json"></script>
+<script src="https://lang.alicdn.com/mcms/ecs-console-aliyun-com/0.0.400/ecs-console-aliyun-com_zh-cn.json"></script>
+<script>
+  window.ALIYUN_ECS_CONSOLE_CONFIG = window['_cross_widget_config']
+  let res = {}
+
+  res = Object.assign(res, window['ecs-console-aliyun-com_zh-cn'])
+  res = Object.assign(res, window['ecs-core-stable_zh-cn'])
+  res = Object.assign(res, window['ecs-console-diagnostic_zh-cn'])
+  window.ALIYUN_ECS_CONSOLE_MESSAGE = res
+
+</script>
+<script src="https://g.alicdn.com/aliyun-ecs/ecs-core/1.30.7/service.js"></script>
+
+  <ops-root></ops-root>
+</body>
+</html>

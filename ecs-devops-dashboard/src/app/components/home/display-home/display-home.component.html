@@ -1,0 +1,326 @@
+<div class="summary-panel" opsTracking pageId="data-summary-page" pageAlias="概览页面">
+  <div class="summary-title">概览</div>
+
+  <!-- 统计信息 start-->
+  <div opsCard>
+    <ops-panel-title title="统计信息" [icon]="statisticsDotTemplate" [marginBottom]="16"></ops-panel-title>
+    <ng-template #statisticsDotTemplate>
+      <span
+        style="background: #0091ff; width: 8px; display: inline-block; border-radius: 50%; aspect-ratio: 1/1;"></span>
+    </ng-template>
+    <ul class="statistics-panel" *ngIf="statisticsData | async as data">
+      <li>
+        <div>
+          <div class="small-title">
+            <span>实例数 / vcpu数</span>
+          </div>
+          <div class="indicator-data">
+            <nz-spin [nzSpinning]="data.instanceNum.spinning">
+              <span>{{ data.instanceNum.vmCount }}</span>
+              <span> / </span>
+              <span
+                style="background-color: #D7EBFF; font-size: 13px; color: #0070CC; padding: 0px 11px;  border-radius: 10px;">{{ data.instanceNum.cpuCount }}</span>
+            </nz-spin>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div></div>
+      </li>
+      <li>
+        <div>
+          <div class="small-title">
+            <span>运行中</span>
+          </div>
+          <div class="indicator-data">
+            <nz-spin [nzSpinning]="data.runningNum.spinning">
+            <span style="color: #39A503;">
+              {{data.runningNum.value}}
+            </span>
+            </nz-spin>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div></div>
+      </li>
+      <li>
+        <div>
+          <div class="small-title">
+            <span>受损</span>
+          </div>
+          <div class="indicator-data">
+            <nz-spin [nzSpinning]="data.impairedNum.spinning">
+            <span (click)="routerLink('healthStatus')" style="color: #EE6666; cursor: pointer;">
+                {{ data.impairedNum.value }}
+            </span>
+            </nz-spin>
+          </div>
+        </div>
+      </li>
+      <li>
+        <div></div>
+      </li>
+      <li>
+        <div>
+          <div class="small-title">
+            <span>事件</span>
+          </div>
+          <div class="indicator-data">
+            <nz-spin [nzSpinning]="data.eventNum.spinning">
+            <span (click)="routerLink('event')" style="color: #0070CC; cursor: pointer;">
+              {{ data.eventNum.value }}
+            </span>
+            </nz-spin>
+          </div>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <!-- 统计信息 end-->
+
+  <!-- 饼图 start-->
+  <div opsCard>
+    <ops-panel-title title="实例" [icon]="eventIconTemplate" [marginBottom]="16"/>
+    <ng-template #eventIconTemplate>
+      <div style="height: 22px;">
+        <svg viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" width="22" height="22">
+          <path
+            d="M725.333333 426.666667l-426.666667 0 0 85.333333 426.666667 0 0-85.333333zM810.666667 128l-42.666667 0 0-85.333333-85.333333 0 0 85.333333-341.333333 0 0-85.333333-85.333333 0 0 85.333333-42.666667 0c-47.146667 0-84.906667 38.186667-84.906667 85.333333l-0.426667 597.333333c0 47.146667 38.186667 85.333333 85.333333 85.333333l597.333333 0c47.146667 0 85.333333-38.186667 85.333333-85.333333l0-597.333333c0-47.146667-38.186667-85.333333-85.333333-85.333333zM810.666667 810.666667l-597.333333 0 0-469.333333 597.333333 0 0 469.333333zM597.333333 597.333333l-298.666667 0 0 85.333333 298.666667 0 0-85.333333z"
+            fill="#1296db"></path>
+        </svg>
+      </div>
+    </ng-template>
+
+    <div class="chart-panel">
+      <ng-container *ngIf="instanceCharts | async as chart">
+        <nz-spin [nzSpinning]="chart.regionChart.spinning">
+          <div echarts [options]="basePieOptions"
+               [merge]="chart.regionChart.options" [autoResize]="true" style="width: 100%; height: 300px;"></div>
+        </nz-spin>
+        <nz-spin [nzSpinning]="chart.healthStatusChart.spinning">
+          <div echarts [options]="basePieOptions"
+               [merge]="chart.healthStatusChart.options" [autoResize]="true" style="width: 100%; height: 300px;"></div>
+        </nz-spin>
+        <nz-spin [nzSpinning]="chart.eventChart.spinning">
+          <div echarts [options]="basePieOptions"
+               [merge]="chart.eventChart.options" [autoResize]="true" style="width: 100%; height: 300px;"></div>
+        </nz-spin>
+      </ng-container>
+    </div>
+  </div>
+  <!-- 饼图 end-->
+  <!-- 资源列表 start-->
+  <div opsCard *ngIf="resourceData | async as rdata">
+    <ops-panel-title title="资源列表" [icon]="resourceIconTemplate" [marginBottom]="16"/>
+    <ng-template #resourceIconTemplate>
+      <div style="height: 22px;">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" version="1.1"
+             width="20" height="22" viewBox="0 0 20 17.24139404296875">
+          <g>
+            <g>
+              <path
+                d="M1.25,0L18.75,0C19.4395,0,20,0.513649,20,1.14943L20,13.2184C20,13.5363,19.7207,13.7931,19.375,13.7931L12.6563,13.7931C12.5703,13.7931,12.5,13.8578,12.5,13.9368L12.5,16.0201C12.5,16.0596,12.5352,16.092,12.5781,16.092L14.6875,16.092C14.8594,16.092,15,16.2213,15,16.3793L15,17.2414L5,17.2414L5,16.3793C5,16.2213,5.14063,16.092,5.3125,16.092L7.42188,16.092C7.46484,16.092,7.5,16.0596,7.5,16.0201L7.5,13.9368C7.5,13.8578,7.42969,13.7931,7.34375,13.7931L0.625,13.7931C0.279297,13.7931,0,13.5363,0,13.2184L0,1.14943C0,0.513649,0.560547,0,1.25,0ZM18.4375,11.4942C18.6094,11.4942,18.75,11.3649,18.75,11.2068L18.75,1.43671C18.75,1.27866,18.6094,1.14935,18.4375,1.14935L1.5625,1.14935C1.39062,1.14935,1.25,1.27866,1.25,1.43671L1.25,11.2068C1.25,11.3649,1.39062,11.4942,1.5625,11.4942L18.4375,11.4942Z"
+                fill-rule="evenodd" fill="#A1C7ED" fill-opacity="1"/>
+            </g>
+            <g>
+              <path
+                d="M16.56051982192993,8.634644971771241C16.603519821929932,9.657544971771241,15.677719821929932,10.49675497177124,14.562519821929932,10.42832497177124C13.564449821929932,10.36889497177124,12.800779821929932,9.605324971771239,12.812499821929931,8.68327497177124L12.812499821929931,8.66886497177124C12.814449821929932,8.539204971771241,12.742189821929932,8.41854497177124,12.621089821929932,8.35371497177124L11.072269821929932,7.52891497177124C10.968749821929933,7.47308497177124,10.839839821929932,7.47668497177124,10.742189821929932,7.53971497177124C10.44140982192993,7.72880497177124,10.078129821929931,7.84046497177124,9.687499821929933,7.84046497177124C9.572269821929932,7.84046497177124,9.457029821929932,7.83145497177124,9.34765982192993,7.811644971771241C9.216799821929932,7.79003497177124,9.085939821929932,7.844064971771241,9.019529821929932,7.95031497177124L8.017579821929932,9.54949497177124C7.919919821929932,9.704364971771241,7.906249821929931,9.89166497177124,7.9804698219299315,10.05554497177124C8.082029821929932,10.27885497177124,8.134769821929932,10.52556497177124,8.123049821929932,10.78489497177124C8.087889821929931,11.67633497177124,7.308589821929932,12.403884971771241,6.341799821929932,12.44710497177124C5.240234821929931,12.49572497177124,4.330078121929931,11.66192497177124,4.376953171929932,10.648024971771239C4.416015721929932,9.760194971771242,5.191405821929932,9.03804497177124,6.154299821929932,8.99482497177124C6.263669821929931,8.98942497177124,6.373049821929932,8.993024971771241,6.478519821929932,9.00563497177124C6.726559821929932,9.03264497177124,6.968749821929931,8.92098497177124,7.093749821929931,8.72109497177124L8.037109821929931,7.21555497177124C8.091799821929932,7.129114971771241,8.091799821929932,7.02106497177124,8.041019821929932,6.93282497177124C7.884769821929932,6.66629497177124,7.800779821929932,6.35834497177124,7.816409821929932,6.0305849717712405C7.859379821929932,5.1373479717712405,8.646479821929931,4.41699707177124,9.615239821929933,4.3827804217712405C10.681639821929931,4.34496197177124,11.562499821929933,5.133745971771241,11.562499821929933,6.10982497177124C11.562499821929933,6.16024497177124,11.560549821929932,6.21067497177124,11.554689821929932,6.25929497177124C11.54491982192993,6.37094497177124,11.603519821929932,6.48080497177124,11.708979821929931,6.53662497177124L13.177739821929931,7.31820497177124C13.306639821929931,7.38664497177124,13.470699821929932,7.38123497177124,13.591799821929932,7.30020497177124C13.917969821929931,7.0822949717712405,14.322269821929932,6.95983497177124,14.755819821929931,6.97424497177124C15.730419821929932,7.00845497177124,16.52341982192993,7.73601497177124,16.56051982192993,8.634644971771241L16.56051982192993,8.634644971771241Z"
+                fill="#A1C7ED" fill-opacity="1"/>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </ng-template>
+    <nz-table style="width: 100%" #basicTable [nzLoading]="rdata.spinning" [nzData]="rdata.value">
+      <thead>
+      <tr>
+        <th>地域</th>
+        <th>云服务器</th>
+        <th>运行中</th>
+        <th>受损</th>
+        <th>事件</th>
+        <th>
+          <span>即将过期 </span>
+          <span nz-tooltip nzTooltipTitle="15天内即将过期的云服务器" nz-icon nzType="question-circle"
+                nzTheme="outline"></span>
+        </th>
+        <th>
+          <span>近期创建 </span>
+          <span nz-tooltip nzTooltipTitle="近7天创建的云服务器" nz-icon nzType="question-circle"
+                nzTheme="outline"></span>
+        </th>
+        <th>已停止</th>
+        <th>云盘</th>
+        <th>
+          <span>镜像 </span>
+          <span nz-tooltip nzTooltipTitle="自定义镜像" nz-icon nzType="question-circle"
+                nzTheme="outline"></span>
+        </th>
+      </tr>
+      </thead>
+      <tbody>
+      <ng-container *ngFor="let data of basicTable.data">
+        <tr>
+          <td
+            nzShowExpand [(nzExpand)]="data.expand"
+          >{{getRegionLocalName(data.regionId)}}</td>
+          <td>
+          <span style="color: #0070CC">
+            {{data.instanceCount}}
+          </span>
+          </td>
+          <td>
+          <span style="color: #39A503">
+            {{data.runningCount}}
+          </span>
+          </td>
+          <td>
+          <span (click)="routerLink('healthStatus', data.regionId)" style="color: #E72525; cursor: pointer">
+            {{data.impairedCount}}
+          </span>
+          </td>
+          <td>
+          <span (click)="routerLink('event', data.regionId)" style="color: #F9C757; cursor: pointer">
+            {{data.eventCount}}
+          </span>
+          </td>
+          <td>{{data.expiresSoonCount}}</td>
+          <td>{{data.recentlyCreatedCount}}</td>
+          <td>{{data.stoppedCount}}</td>
+          <td>{{data.diskCount}}</td>
+          <td>{{data.imagesCount}}</td>
+        </tr>
+        <tr [nzExpand]="data.expand">
+          <td colspan="10">
+            <nz-table [style]="{width: nestedTableWidth}" class="resource-nested-table" *ngIf="instanceData | async as childData"
+                      [nzTotal]="getRegionData(childData, data.regionId).length"
+                      [nzScroll]="{ x: '900px' }"
+                      [nzShowTotal]="totalTemplate"
+                      [nzFrontPagination]="true"
+                      [nzPageSize]="5"
+                      #childBasicTable
+                      [nzData]="getRegionData(childData, data.regionId)">
+              <thead>
+              <tr>
+                <th nzWidth="220px" nzLeft>实例Id/名称</th>
+                <th nzWidth="100px"
+                    [nzFilters]="instanceStatusFilter"
+                    [nzFilterFn]="dataFilters.statusFilter">状态</th>
+                <th nzWidth="120px"
+                    [nzFilters]="instanceHealthStatusFilter"
+                    [nzFilterFn]="dataFilters.healthStatusFilter">健康状态</th>
+                <th nzWidth="100px">操作系统</th>
+                <th nzWidth="150px">可用区</th>
+                <th nzWidth="230px">配置</th>
+                <th nzWidth="200px">IP地址</th>
+                <th nzWidth="120px"
+                    [nzFilters]="networkTypeFilter"
+                    [nzFilterFn]="dataFilters.networkTypeFilter">网络类型</th>
+                <th nzWidth="230px"
+                    [nzFilters]="chargeTypeFilter"
+                    [nzFilterFn]="dataFilters.chargeTypeFilter">付费方式</th>
+                <th nzWidth="100px" nzRight>操作</th>
+              </tr>
+              </thead>
+              <tbody>
+              <ng-container *ngFor="let childData of childBasicTable.data">
+                <tr>
+                  <td nzLeft>
+                    <div>
+                      {{childData.InstanceId}}
+                    </div>
+                    <div style="font-size: 12px">{{childData.InstanceName}}</div>
+                  </td>
+                  <td>
+                    <span *ngIf="childData.Status === 'Running'" style="color: #39A503;" nz-icon
+                          nzType="check-circle" nzTheme="outline"></span>
+                    <span *ngIf="childData.Status !== 'Running'" style="color: #F9C757;" nz-icon
+                          nzType="exclamation-circle" nzTheme="outline"></span>
+                    {{childData.Status | instanceStatusDesc}}
+                  </td>
+                  <td>
+                    <ng-container>
+                     <span *ngIf="childData.HealthStatus.name === 'Ok'" style="color: #39A503;" nz-icon
+                             nzType="check-circle" nzTheme="outline"></span>
+                      <span *ngIf="childData.HealthStatus.name === 'InsufficientData'" style="color: #F9C757;" nz-icon
+                            nzType="exclamation-circle" nzTheme="outline"></span>
+                      <span *ngIf="childData.HealthStatus.name === 'Impaired'" style="color: #FF0000;" nz-icon
+                            nzType="close-circle" nzTheme="outline"></span>
+                      <span *ngIf="childData.HealthStatus.name === 'Initializing'" style="color: #0070cc;" nz-icon
+                            nzType="info-circle" nzTheme="outline"></span>
+                      <span *ngIf="childData.HealthStatus.name === 'NotApplicable'" style="color: #F9C757;" nz-icon
+                            nzType="question-circle" nzTheme="outline"></span>
+                    </ng-container>
+                    {{childData.HealthStatus.name | healthStatusDesc}}
+                  </td>
+                  <td>
+                    <span nz-popover [nzPopoverContent]="osTypePopoverContent">
+                      {{childData.OSType}}
+                    </span>
+                    <ng-template #osTypePopoverContent>
+                      <div><strong>{{childData.OSName}}</strong></div>
+                      <div>{{childData.ImageId}}</div>
+                    </ng-template>
+                  </td>
+                  <td>{{childData.ZoneId}}</td>
+                  <td>
+                    <div>
+                      <div>
+                        <span style="padding-right: 5px">
+                          <strong>{{childData.Cpu}}</strong> 核(vCPU)
+                        </span>
+                        <span style="padding-right: 5px">
+                          <strong>{{childData._MemoryInfo.memory}}</strong>
+                          {{childData._MemoryInfo.unit}}
+                        </span>
+                        <span>
+                          <strong>{{childData.InternetMaxBandwidthOut}}</strong> Mbps
+                        </span>
+                      </div>
+                      <div *ngIf="childData.GPUSpec !== ''">
+                        GPU: <span>{{childData.GPUSpec}}</span>
+                      </div>
+                      <div style="font-size: 14px">
+                        <a target="_blank" [href]="getInstanceTypeUrl(childData.InstanceType)">
+                          {{childData.InstanceType}}
+                        </a>
+                      </div>
+                    </div>
+                  </td>
+                  <td>
+                    <div>
+                      <div *ngFor="let ip of childData._IpAddress">
+                        {{ip.address}}({{ip.desc}})
+                      </div>
+                    </div>
+                  </td>
+                  <td>{{childData.InstanceNetworkTypeDesc}}</td>
+                  <td>
+                    <div>
+                      <div>{{childData.InstanceChargeTypeDesc}}</div>
+                      <div>{{childData.CreationTimeLocal}} <span style="padding-left: 5px">创建</span></div>
+                    </div>
+                  </td>
+                  <td nzRight>
+                    <a *ngIf="childData.Status === 'Running'"
+                       (click)="toDiagnose(childData.InstanceId, childData.RegionId)">诊断</a>
+                    <span *ngIf="childData.Status !== 'Running'"
+                          nz-tooltip nzTooltipTitle="发起诊断，需要实例状态为运行状态"
+                          style="cursor: not-allowed;color: #aeaeae"
+                    >诊断</span>
+                  </td>
+                </tr>
+              </ng-container>
+              </tbody>
+              <ng-template #totalTemplate> 共 {{ getRegionData(childData, data.regionId).length }} 条</ng-template>
+            </nz-table>
+          </td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </nz-table>
+  </div>
+  <!-- 资源列表 end-->
+
+</div>

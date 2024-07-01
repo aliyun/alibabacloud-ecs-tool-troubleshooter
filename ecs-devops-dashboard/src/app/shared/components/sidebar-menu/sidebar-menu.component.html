@@ -1,0 +1,54 @@
+<div class="left-panel">
+  <div style="padding: 16px;">
+    <span nz-icon nzType="cloud-server" nzTheme="outline" style="font-size: 18px; color: #00a1ff;"></span>
+    <span style="font-size: 14px; color: #0082ff; margin-left: 5px;">阿里云ECS可观测平台</span>
+  </div>
+  <ul>
+    <ng-container *ngFor="let item of menuData; index as index;">
+      <ng-container *ngIf="item.isLeaf;">
+        <li (click)="linkToPageByParentPage(item, index)" [ngClass]="{active: parentActiveIndex === index}">
+          <ng-container
+            *ngTemplateOutlet="menuItemTemplate; context: { title: item.title, type: item.iconType || 'dashboard', index: index}"></ng-container>
+        </li>
+      </ng-container>
+    </ng-container>
+  </ul>
+</div>
+
+<div class="right-panel" style="display: none">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <nz-input-group [nzSuffix]="suffixIconSearch">
+      <input type="text" nz-input placeholder="请输入搜索关键词"/>
+    </nz-input-group>
+    <ng-template #suffixIconSearch>
+      <span nz-icon nzType="search"></span>
+    </ng-template>
+    <span nz-icon nzType="close" nzTheme="outline" class="close-btn" (click)="closeEvent()"></span>
+  </div>
+
+  <ng-container *ngIf="childrenMenu && childrenMenu.length; else emptyMenuTemplate">
+    <div class="child-menu">
+      <ul>
+        <li *ngFor="let item of childrenMenu;">
+          <span (click)="linkToPageByChildPage(item)" style="flex: 1;">{{ item.title }}</span>
+          <span></span>
+        </li>
+      </ul>
+      <ul></ul>
+      <ul></ul>
+    </div>
+  </ng-container>
+  <ng-template #emptyMenuTemplate>
+    <nz-empty nzNotFoundImage="simple" [nzNotFoundContent]="notChildMenuTemplate" style="margin-top: 60px;"></nz-empty>
+    <ng-template #notChildMenuTemplate>
+      <span style="color: #bababa;">没有发现子菜单</span>
+    </ng-template>
+  </ng-template>
+</div>
+
+<ng-template #menuItemTemplate let-title="title" let-type="type" let-index="index">
+    <span>
+        <span nz-icon [nzType]="type" nzTheme="outline" style="color: #3561bb;"></span>
+        <span style="margin-left: 11px;">{{ title }}</span>
+    </span>
+</ng-template>

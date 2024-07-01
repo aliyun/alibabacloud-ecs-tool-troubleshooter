@@ -1,0 +1,70 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+
+  .summary-panel {
+    display: grid;
+    grid-gap: 12px 24px;
+    grid-template-columns: repeat(3, calc(100% / 3 - 16px));
+    padding-bottom: 10px;
+
+    & > div {
+      grid-column-start: 1;
+      grid-column-end: 4;
+    }
+
+    .summary-title {
+      height: 22px;
+      width: 200px;
+      font-weight: 600;
+      font-size: 16px;
+    }
+
+  }
+
+
+  .statistics-panel {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: grid;
+    grid-auto-flow: column;
+    grid-template-columns: 1fr 2px 1fr 2px 1fr 2px 1fr;
+    justify-items: center;
+
+    li {
+      .small-title {
+        font-size: 15px;
+        color: #515151;
+        text-align: center;
+        letter-spacing: 1px;
+      }
+
+      .indicator-data {
+        font-size: 19px;
+        color: #333333;
+        text-align: center;
+      }
+
+      &:nth-child(2n) div {
+        background-color: #e7e2e2;
+        height: 100%;
+        width: 1px;
+        border-radius: 1px;
+      }
+    }
+  }
+
+  .chart-panel {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+}
+
+// 设置嵌套表内宽度 避免内容 撑开 导致 nzScroll 不生效
+.resource-nested-table{
+  //width: calc(100% - 134px);
+  min-width: 1300px;
+}

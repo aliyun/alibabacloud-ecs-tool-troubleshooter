@@ -1,0 +1,88 @@
+:host {
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  .event-top {
+    height: 22px;
+    width: 200px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .event-table {
+    width: 100%;
+    margin-top: 18px;
+
+    .container {
+      display: flex;
+      justify-content: flex-end;
+    }
+  }
+
+  .content-top {
+    margin-bottom: 15px;
+
+    > div {
+      flex: none;
+      margin-right: 10px;
+
+      > span {
+        height: 34px;
+        line-height: 34px;
+        display: inline-block;
+      }
+    }
+
+    .event-label {
+      ::ng-deep .ant-select-selection-item {
+        max-width: 110px; /* 或其他你需要的长度 */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+
+    .status-label {
+      ::ng-deep .ant-select-selection-item {
+        max-width: 80px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+  }
+
+  .content-button {
+    //text-align: right;
+    :nth-child(2) {
+      margin-right: 10px;
+    }
+  }
+
+  nz-select {
+    width: 300px;
+  }
+
+  input {
+    width: 300px;
+  }
+
+  .event-panel {
+    display: grid;
+    grid-template-columns: 590px calc(100% - 590px - 16px);
+    grid-gap: 16px;
+  }
+}
+
+::ng-deep .ant-drawer-body {
+  font-size: 14px;
+  line-height: 0;
+  //font-weight: 150;
+}
+
+::ng-deep .ant-drawer-title {
+  font-weight: 400;
+  font-size: 20px;
+  line-height: 22px;
+}

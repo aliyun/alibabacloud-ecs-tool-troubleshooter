@@ -1,0 +1,41 @@
+<span nz-icon nzType="unordered-list" nzTheme="outline" class="logo" [routerLink]="['/']" (mouseenter)="openMenu()" *ngIf="showMenuIcon | async as show;"></span>
+<span nz-icon nzType="cloud-server" nzTheme="outline" style="font-size: 24px; color: #00a1ff; margin-right: 10px;" [routerLink]="['/']"></span>
+
+<span style="color: #3e94ff; cursor: pointer; margin-top: 2px;">
+    <span style="font-size: 18px; font-weight: 500;" [routerLink]="['/']">阿里云ECS可观测平台</span>
+</span>
+
+<span style="flex-grow: 1;"></span>
+
+<div class="right-photo">
+  <span (click)="settingOpen()" nz-icon [nzType]="'setting'" [nzTheme]="'twotone'"></span>
+</div>
+
+<nz-drawer
+  nzWidth="400px"
+  [nzClosable]="false"
+  [nzVisible]="$any(settingVisible | async)"
+  nzPlacement="right"
+  nzTitle="设置AccessKey"
+  (nzOnClose)="settingClose()"
+>
+  <ng-container *nzDrawerContent>
+    <div class="setting-input">
+      <span class="setting-input-label">AccessKey ID：</span>
+      <span class="setting-input-content">
+        <input nz-input type="text" [(ngModel)]="ak" placeholder="请输入AccessKey ID">
+      </span>
+    </div>
+    <div class="setting-input">
+      <span class="setting-input-label">AccessKey Secret：</span>
+      <span class="setting-input-content">
+        <input nz-input type="password" [(ngModel)]="sk" placeholder="请输入AccessKey Secret">
+      </span>
+    </div>
+    <div class="setting-btn">
+      <button nz-button nzType="primary" (click)="settingSave()">保存</button>
+      <button nz-button nzType="default" (click)="settingClose()">关闭</button>
+    </div>
+    <!-- 提示信息 ak sk 存储本地? -->
+  </ng-container>
+</nz-drawer>

@@ -1,0 +1,33 @@
+:host {
+    height: 100vh;
+    display: block;
+
+    .page-container {
+        height: 100vh;
+    }
+
+    .page-header {
+        height: 48px;
+        box-shadow: 0 4px 10px 0 rgba(52, 80, 121, 0.10);
+
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        background: white;
+    }
+
+    .page-section {
+        visibility: visible;
+        display: block;
+        height: calc(100vh - 55px);
+        overflow-y: auto;
+        padding: 4px 24px 16px 24px;
+    }
+}
+
+body {
+    background-color: #f9feffd4;
+    min-width: 1280px;
+    padding-block-start: 55px;
+}

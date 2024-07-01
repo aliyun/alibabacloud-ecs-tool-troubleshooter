@@ -1,0 +1,24 @@
+<div class="report-list-container">
+  <nz-skeleton [nzActive]="true" [nzLoading]="loading">
+
+    <div class="report-list-content" *ngIf="diagnoseReports && diagnoseReports.length > 0;else emptyTemplate">
+      <!-- 折叠组件 + report 组件 -->
+      <nz-collapse [nzAccordion]="false">
+        <nz-collapse-panel
+          *ngFor="let report of diagnoseReports; let index = index"
+          [nzHeader]="report?.previewInfo?.reportId"
+          [nzActive]="index === 0"
+        >
+          <ops-diagnosis-report [report]="report"></ops-diagnosis-report>
+        </nz-collapse-panel>
+      </nz-collapse>
+    </div>
+
+    <!-- empty -->
+    <ng-template #emptyTemplate>
+      <nz-empty class="report-list-empty" [nzNotFoundContent]="'没有数据可供展示'"></nz-empty>
+    </ng-template>
+
+  </nz-skeleton>
+</div>
+

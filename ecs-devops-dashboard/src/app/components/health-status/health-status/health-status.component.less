@@ -1,0 +1,73 @@
+:host {
+  width: 100%;
+  height: 100%;
+  display: block;
+
+  .health-top{
+    height: 22px;
+    width: 200px;
+    font-weight: 600;
+    font-size: 16px;
+  }
+
+  .search-div{
+    margin-top: 24px;
+    padding: 0 16px;
+
+    .content-top {
+      margin-bottom: 15px;
+      >div {
+        >span {
+          height:32px;
+          line-height: 32px;
+          display: inline-block;
+        }
+        > button{
+          margin-left: 10px;
+        }
+      }
+    }
+  }
+
+  .card-div{
+    width: 100%;
+    margin-top: 24px;
+    .container {
+      display: flex;
+      justify-content: flex-end;
+    }
+    .search-box {
+      padding: 8px;
+    }
+
+    .search-box input {
+      width: 188px;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .search-box button {
+      width: 90px;
+    }
+
+    .search-button {
+      margin-right: 8px;
+    }
+
+    .health-panel {
+      display: grid;
+      grid-template-columns: 590px calc(100% - 590px - 16px);
+      grid-gap: 16px;
+    }
+    .table-tag {
+      border-radius: 25px;
+    }
+  }
+
+  .head-example {
+    border-radius: 25px;
+    display: inline-block;
+    vertical-align: middle;
+  }
+
+}

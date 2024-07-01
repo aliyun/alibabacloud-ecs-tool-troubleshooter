@@ -1,0 +1,15 @@
+<div class="report-container">
+  <div class="report-head">
+    <h3>诊断信息</h3>
+    <div class="report-head-info">
+      <span>资源ID：<span>{{previewInfo.resourceId}}</span></span>
+      <span>资源类型：<span>{{previewInfo.resourceType}}</span></span>
+      <span>报告ID：<span>{{previewInfo.reportId}}</span></span>
+      <span>诊断的时间范围：<span>{{previewInfo.cycleTime}}</span></span>
+      <span>诊断创建时间：<span>{{previewInfo.diagnosisTime}}</span></span>
+    </div>
+  </div>
+  <nz-skeleton [nzActive]="true" [nzLoading]="loadingReport">
+    <div class="report-content" #diagnoseReport></div>
+  </nz-skeleton>
+</div>

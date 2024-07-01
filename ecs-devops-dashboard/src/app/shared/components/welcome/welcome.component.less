@@ -1,0 +1,75 @@
+:host {
+    display: grid;
+    height: 100%;
+    width: 100%;
+    grid-template-rows: 15% auto 1fr;
+
+
+    &::after {
+        display: block;
+        content: '';
+    }
+
+    &::before {
+        display: block;
+        content: '';
+    }
+
+    .search-panel {
+        margin: 0 auto;
+        width: 50%;
+        min-width: 780px;
+
+        .logo-text {
+            text-align: center;
+            font-size: 40px;
+            font-weight: 500;
+            margin-block: 10px;
+
+            background-image: linear-gradient(to top, #68f2ff, #0066ff);
+            color: transparent;
+            background-clip: text;
+            -webkit-background-clip: text;
+        }
+
+        nz-input-group {
+            border-radius: 4px;
+        }
+
+        .search-history {
+
+            font-weight: 400;
+            font-size: 14px;
+            color: #666666;
+            letter-spacing: 0;
+            margin-top: 7px;
+
+            ul {
+                padding: 0;
+                margin: 0;
+                list-style: none;
+                display: inline-flex;
+
+                li {
+                    // padding: 0 3px;
+                    letter-spacing: 0px;
+                    font-size: 14px;
+                    cursor: pointer;
+
+                    &::after {
+                        content: '、';
+                        margin-right: -3px;
+                        margin-left: 2px;
+                    }
+
+                    &:last-child {
+                        &::after {
+                            content: none;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+}

@@ -1,0 +1,28 @@
+<ng-container *ngIf="iconTemplateRef">
+    <div class="icon-panel" [ngClass]="{'double-dot': icon === 'doubleDot', 'single-dot':  icon === 'singleDot'}">
+        <ng-container [ngTemplateOutlet]="iconTemplateRef"></ng-container>
+    </div>
+</ng-container>
+
+<span class="panel-title" [style.fontSize.px]="fontSize" [style.color]="color" [style.marginInlineStart.px]="marginInlineStart">{{ title }}</span>
+
+<ng-container *ngIf="rightContent">
+    <ng-container *ngIf="rightCustomTemplateRef else rightTextTemplate">
+        <div class="right-content">
+            <ng-container [ngTemplateOutlet]="rightCustomTemplateRef"></ng-container>
+        </div>
+    </ng-container>
+    <ng-template #rightTextTemplate>
+        <div class="right-content">
+            <span>{{ rightContent }}</span>
+        </div>
+    </ng-template>
+</ng-container>
+<ng-template #doubleDotTemplate>
+    <span></span>
+    <span></span>
+</ng-template>
+
+<ng-template #singleDotTemplate>
+    <span></span>
+</ng-template>

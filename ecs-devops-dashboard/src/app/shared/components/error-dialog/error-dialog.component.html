@@ -1,0 +1,57 @@
+<ng-container *ngTemplateOutlet="displayTemplate; context: contextExp"></ng-container>
+
+<ng-template #httpErrorResponseTemplate let-code="code" let-name="name" let-message="message" let-requestId="requestId">
+    <div class="http-error-panel">
+        <div>
+            <span>状态码:</span>
+            <span>{{ code }}</span>
+         </div>
+        <div *ngIf="name">
+            <span>接口名称:</span>
+            <div>
+                <div opsCopyText style="display: inline;">{{ name }}</div>
+            </div>
+        </div>
+        <div>
+            <span>错误信息:</span>
+            <div>
+                <div *ngIf="message" opsCopyText  style="display: inline;">{{ message }}</div>
+            </div>
+        </div>
+        <div *ngIf="requestId">
+            <span>Request ID:</span>
+            <div>
+                <div *ngIf="requestId" opsCopyText  style="display: inline;">{{ requestId }}</div>
+            </div>
+        </div>
+    </div>
+</ng-template>
+
+<ng-template #httpApiErrorResponseTemplate let-code="code" let-hostId="hostId" let-message="message" let-requestId="requestId" let-recommend="recommend">
+  <div class="http-error-panel">
+    <div>
+      <span>状态码:</span>
+      <span>{{ code }}</span>
+    </div>
+    <div *ngIf="hostId">
+      <span>HostId:</span>
+      <div>
+        <div opsCopyText style="display: inline;">{{ hostId }}</div>
+      </div>
+    </div>
+    <div>
+      <span>错误信息:</span>
+      <div>
+        <div *ngIf="message" opsCopyText  style="display: inline;">{{ message }}</div>
+      </div>
+    </div>
+    <div *ngIf="requestId">
+      <span>RequestID:</span>
+      <div>
+        <div *ngIf="requestId" opsCopyText  style="display: inline;">
+          <a target="_blank" [href]="recommend">{{ requestId }}</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</ng-template>

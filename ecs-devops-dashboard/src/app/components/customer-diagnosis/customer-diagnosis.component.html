@@ -1,0 +1,40 @@
+<div class="app-customer-diagnosis" opsTracking pageId="customer-diagnosis-page">
+  <div class="summary-title">实例诊断</div>
+
+  <div class="search-panel">
+    <label>起止时间：</label>
+    <nz-range-picker
+      [nzShowTime]="{ nzFormat: 'HH:mm' }"
+      nzFormat="yyyy-MM-dd HH:mm"
+      [nzPlaceHolder]="['开始时间', '默认俩天']"
+      [(ngModel)]="timeRange"
+      (ngModelChange)="onTimeChange($event)"
+      (nzOnOk)="onTimeChange($event)"
+    ></nz-range-picker>
+    <span style="margin-left: 10px;">实例 ID:</span>
+    <input type="text" #input nz-input
+           [(ngModel)]="resourceId"
+           (ngModelChange)="resourceIdChange($event)"
+           placeholder="请输入实例 ID"
+           style="width: 220px; margin-left: 10px;"
+    />
+    <button nz-button nzType="primary" style="margin: 0 10px;border-radius: 5px" (click)="createDiagnosis()">诊断</button>
+    <button nz-button nzType="primary" style="margin: 0 10px;border-radius: 5px" (click)="queryHistory(input.value)">查询报告</button>
+  </div>
+
+  <div style="padding-top: 10px" *ngIf="showContent">
+    <nz-spin *ngIf="loadingData | async as loading"
+             [nzSpinning]="loading.isLoading"
+             [nzSize]="'large'"
+             [nzTip]="loading.desc"
+             [nzDelay]="300">
+      <div style="min-height: 200px">
+        <ops-diagnosis-report-list
+          [loading]="(reportsData | async).spinning"
+          [reports]="(reportsData | async).data"
+        ></ops-diagnosis-report-list>
+      </div>
+    </nz-spin>
+  </div>
+
+</div>

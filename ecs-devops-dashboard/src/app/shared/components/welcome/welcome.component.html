@@ -1,0 +1,20 @@
+<div class="search-panel" opsTracking pageId="global-search-page">
+  <div class="logo-text">
+    <span>阿里云ECS可观测平台</span>
+  </div>
+  <div #wrapSearchInput>
+    <nz-input-group [nzSuffix]="suffixIconSearch" nzSize="large">
+      <input type="text" [(ngModel)]="searchValue" (ngModelChange)="searchValueChange($event)" nz-input
+             placeholder="请输入资源ID" nzSize="large" (keyup.enter)="searchEvent()"/>
+    </nz-input-group>
+    <ng-template #suffixIconSearch>
+      <span nz-icon nzType="search" (click)="searchEvent()" aria-hidden="true"></span>
+    </ng-template>
+  </div>
+
+  <!-- 菜单展示 -->
+  <div>
+    <ops-search-block [searchInput]="searchInputObservable"/>
+  </div>
+
+</div>

@@ -1,0 +1,17 @@
+:host {
+    .http-error-panel {
+        &>div {
+            display: grid;
+            grid-template-columns: 80px calc(100% - 80px);
+            margin-block-end: 6px;
+
+            & > div {
+                margin-block-end: 0;
+            }
+
+            &:last-child {
+                margin-block-end: 0 !important;
+            }
+        }
+    }
+}

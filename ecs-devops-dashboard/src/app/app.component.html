@@ -1,0 +1,13 @@
+<nz-water-mark [nzContent]="waterContent" [nzRotate]="-45" [nzZIndex]="999999" [nzGap]="[40, 40]" [nzOffset]="[70, 70]">
+  <div class="page-container">
+    <header class="page-header">
+      <ops-page-header></ops-page-header>
+    </header>
+    <section class="page-section">
+      <router-outlet></router-outlet>
+    </section>
+  </div>
+</nz-water-mark>
+<nz-drawer nzPlacement="left" nzClosable="false" nzWidth="210px" [nzMask]="true" [nzVisible]="$any(menuVisible | async)" [nzMaskClosable]="true" [nzBodyStyle]="{padding:'0px', backgroundColor:'#F5F7FB', height: '100%', width: '100%', overflow:'hidden'}" (nzOnClose)="closeMenu()" [nzZIndex]="9999999">
+  <ops-sidebar-menu *nzDrawerContent />
+</nz-drawer>

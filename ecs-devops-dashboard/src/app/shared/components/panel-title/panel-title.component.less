@@ -1,0 +1,58 @@
+:host {
+
+    display: flex;
+    width: 100%;
+
+    .icon-panel {
+        position: relative;
+        display: inline;
+    }
+
+    .double-dot {
+        span {
+            display: block;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #1194fc80;
+            aspect-ratio: 1/1;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+
+            &:first-child {
+                margin: -2px;
+            }
+
+            &:last-child {
+                margin: 2px;
+            }
+        }
+    }
+
+    .single-dot {
+        span {
+            display: block;
+            height: 12px;
+            border-radius: 50%;
+            background-color: #1194fcbf;
+            aspect-ratio: 1/1;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+    }
+
+    .panel-title {
+        font-family: PingFangSC;
+        font-weight: 600;
+        font-size: 14px;
+        color: #333333;
+        letter-spacing: 0;
+        text-align: center;
+    }
+
+    .right-content {
+        margin-inline-start: auto;
+        cursor: pointer;
+    }
+}

@@ -1,0 +1,8 @@
+<nz-result nzStatus="404" [nzTitle]="title" [nzSubTitle]="noPageTemplate" opsTracking pageId="empty-page">
+    <div nz-result-extra>
+        <a nz-button nzType="link" [routerLink]="['/']">返回首页</a>
+    </div>
+</nz-result>
+<ng-template #noPageTemplate>
+   <div class="ant-result-subtitle">您访问的页面不存在，请检查URL后再试</div>
+</ng-template>

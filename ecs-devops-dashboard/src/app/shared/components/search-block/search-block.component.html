@@ -1,0 +1,15 @@
+<ul *ngIf="showLeft" style="margin: 0; list-style-type: none;  padding: 3px 0 0;position: relative;">
+</ul>
+<div style="flex-grow: 1;" class="right-panel">
+  <div class="display-content">
+    <ng-container *ngFor="let item of model.all">
+        <span (click)="navigate(item)">
+            {{ item.title }}
+        </span>
+    </ng-container>
+  </div>
+</div>
+
+<ng-template #emptyTemplate>
+  <nz-empty style="margin-block-start: 30px;"></nz-empty>
+</ng-template>
