@@ -24,6 +24,9 @@ import {NzSpinModule} from "ng-zorro-antd/spin";
 import {NzDropDownModule} from "ng-zorro-antd/dropdown";
 import {NzEmptyModule} from "ng-zorro-antd/empty";
 import {HealthStatusEffectService} from "./services/effects/health-status-effect.service";
+import {NzToolTipModule} from "ng-zorro-antd/tooltip";
+import {NzModalModule} from "ng-zorro-antd/modal";
+import {NzRadioModule} from "ng-zorro-antd/radio";
 
 
 @NgModule({
@@ -55,6 +58,9 @@ import {HealthStatusEffectService} from "./services/effects/health-status-effect
     NzSpinModule,
     NzDropDownModule,
     NzEmptyModule,
+    NzToolTipModule,
+    NzModalModule,
+    NzRadioModule,
   ],
   providers: [
     HealthStatusEffectService

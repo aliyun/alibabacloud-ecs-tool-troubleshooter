@@ -1,49 +1,49 @@
-<div opsTracking pageId="customer-event-page">
+<div>
   <div class="event-top">用户事件</div>
   <div style="margin-top: 20px">
     <div>
-      <div nz-row class="content-top">
+      <div class="content-top" nz-row>
         <div nz-col nzSpan="10">
           <span>起止时间：</span>
-          <nz-range-picker [nzShowTime]="{ nzFormat: 'HH:mm' }" style="vertical-align: bottom;"
-                           nzFormat="yyyy-MM-dd HH:mm" [(ngModel)]="currentDate"
-                           (nzOnOk)="timeOk()"></nz-range-picker>
+          <nz-range-picker (nzOnOk)="timeOk()" [(ngModel)]="currentDate"
+                           [nzShowTime]="{ nzFormat: 'HH:mm' }" nzFormat="yyyy-MM-dd HH:mm"
+                           style="width: 352px;vertical-align: bottom;"></nz-range-picker>
         </div>
         <div nz-col nzSpan="8">
           <span style="width: 70px;text-align: right">实例ID：</span>
-          <input  nz-input placeholder="实例ID" [(ngModel)]="instanceId"/>
+          <input [(ngModel)]="instanceId" nz-input placeholder="实例ID"/>
         </div>
-        <div nz-col nzSpan="5" class="content-button">
-          <button style="margin-right: 10px" nz-button nzType="primary" (click)="search()">
+        <div class="content-button" nz-col nzSpan="5">
+          <button (click)="search()" nz-button nzType="primary" style="margin-right: 10px">
             <span nz-icon nzType="search"></span>搜索
           </button>
-          <button nz-button nzType="default" (click)="resetting()">
+          <button (click)="resetting()" nz-button nzType="default">
             重置
           </button>
         </div>
       </div>
-      <div nz-row class="content-top">
+      <div class="content-top" nz-row>
         <div class="event-label" nz-col nzSpan="10">
           <span>事件类型：</span>
-          <nz-select [nzDropdownMatchSelectWidth]="false"
-                     style="width: 352px; line-height: 30px" [(ngModel)]="eventType" nzPlaceHolder="事件类型"
+          <nz-select [(ngModel)]="eventType"
+                     [nzDropdownMatchSelectWidth]="false" [nzMaxTagCount]=2 nzAllowClear
                      nzMode="multiple"
-                     nzAllowClear [nzMaxTagCount]=2>
+                     nzPlaceHolder="事件类型" style="width: 352px; line-height: 30px">
             <nz-option *ngFor="let a of acceptInquiredOpsCodes" [nzLabel]="a.value+'('+a.key+')'"
                        [nzValue]="a.key"></nz-option>
           </nz-select>
         </div>
         <div class="status-label" nz-col nzSpan="8">
           <span>事件状态：</span>
-          <nz-select [(ngModel)]="eventStatus" nzPlaceHolder="事件状态" nzMode="multiple"
-                     nzAllowClear [nzMaxTagCount]=2>
+          <nz-select [(ngModel)]="eventStatus" [nzMaxTagCount]=2 nzAllowClear
+                     nzMode="multiple" nzPlaceHolder="事件状态">
             <nz-option *ngFor="let a of acceptInquiredEventStatus" [nzLabel]="a.desc+'('+a.name+')'"
                        [nzValue]="a.name"></nz-option>
           </nz-select>
         </div>
         <div nz-col nzSpan="8">
           <span>地域：</span>
-          <nz-select style="width: 170px;" nzShowSearch [(ngModel)]="region" nzPlaceHolder="请选择地域">
+          <nz-select [(ngModel)]="region" nzPlaceHolder="请选择地域" nzShowSearch style="width: 170px;">
             <nz-option nzLabel="全地域" nzValue="">全地域</nz-option>
             <nz-option *ngFor="let region of regionInfo"
                        [nzLabel]="$any(region).LocalName"
@@ -54,70 +54,99 @@
         </div>
       </div>
     </div>
-    <div opsCard [dynamicShadow]="true" style="margin-top:18px;">
+    <div [dynamicShadow]="true" opsCard style="margin-top:18px;">
       <div class="event-panel">
         <ng-container *ngIf="chartData | async as chart">
           <nz-spin [nzSpinning]="chart.pie.spinning" nzDelay="200">
-            <div echarts [options]="eventPieOptions" [merge]="chart.pie.options" [autoResize]="true"
+            <div [autoResize]="true" [merge]="chart.pie.options" [options]="eventPieOptions" echarts
                  style="width: 100%; height: 300px;"></div>
           </nz-spin>
           <nz-spin [nzSpinning]="chart.line.spinning" nzDelay="200">
-            <div echarts [options]="eventLineOptions" opsEmptyEcharts="line" title="历史事件"
-                 [merge]="chart.line.options" [autoResize]="true" style="width: 100%; height: 300px"></div>
+            <div [autoResize]="true" [merge]="chart.line.options" [options]="eventLineOptions" echarts
+                 opsEmptyEcharts="line" style="width: 100%; height: 300px" title="历史事件"></div>
           </nz-spin>
         </ng-container>
       </div>
     </div>
 
-    <div opsCard [dynamicShadow]="true" class="event-table">
-      <ng-container *ngIf="tableDataObservable | async as table">
-        <nz-table #basicTable
-                  nzShowSizeChanger
-                  [nzShowPagination]="true"
-                  [nzData]="table.dataList"
-                  [nzTotal]="table.total"
-                  [nzLoading]="table.spinning"
-                  [nzShowSizeChanger]="true"
-                  [nzFrontPagination]="true"
-        >
-          <thead>
-          <tr>
-            <th>实例ID</th>
-            <th [nzFilters]="regionFilters"
-                [nzFilterFn]="dataFilters.regionFilter">地域
-            </th>
-            <th>事件ID</th>
-            <th [nzFilters]="eventTypeFilters"
-                [nzFilterFn]="dataFilters.eventTypeFilter">事件类型
-            </th>
-            <th [nzWidth]="'120px'" [nzFilters]="eventStatusFilters"
-                [nzFilterFn]="dataFilters.eventStatusFilter">事件状态
-            </th>
-            <th>发布时间</th>
-            <th>完成时间</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr *ngFor="let data of basicTable.data">
-            <td>{{ data['InstanceId'] }}</td>
-            <td>
-              <span nz-popover [nzPopoverContent]="data['RegionId']"
+    <div *ngIf="tableDataObservable | async as table" [dynamicShadow]="true" class="event-table" opsCard>
+      <nz-tabset
+        [(nzSelectedIndex)]="selectedIndex">
+        <nz-tab nzTitle="事件分布">
+          <ops-event-distribution (itemClick)="mapItemClick($event)" [value]="table"/>
+        </nz-tab>
+        <nz-tab nzTitle="事件列表">
+          <nz-table #basicTable
+                    [nzData]="table.dataList"
+                    [nzFrontPagination]="true"
+                    [nzLoading]="table.spinning"
+                    [nzShowPagination]="true"
+                    [nzShowSizeChanger]="true"
+                    [nzTotal]="table.total"
+                    nzShowSizeChanger
+                    style="width: 100%"
+          >
+            <thead>
+            <tr>
+              <th nzWidth="232px">实例ID</th>
+              <th nzWidth="120px" [nzFilterFn]="dataFilters.regionFilter"
+                  [nzFilters]="regionFilters">地域
+              </th>
+              <th nzWidth="235px">事件ID</th>
+              <th [nzFilterFn]="dataFilters.eventTypeFilter"
+                  [nzFilters]="eventTypeFilters">事件类型
+              </th>
+              <th [nzFilterFn]="dataFilters.eventStatusFilter" [nzFilters]="eventStatusFilters"
+                  [nzWidth]="'120px'">事件状态
+              </th>
+              <th>发布时间</th>
+              <th>完成时间</th>
+              <th nzWidth="70px">操作</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr *ngFor="let data of basicTable.data">
+              <td>
+                <div>
+                    <span [showIcon]="false" opsCopyText>
+                    {{ data['InstanceId'] }}
+                  </span>
+                </div>
+              </td>
+              <td>
+              <span [nzPopoverContent]="data['RegionId']" nz-popover
                     nzPopoverPlacement="top">{{getRegionDes(data['RegionId'])}}</span>
-            </td>
-            <td>{{ data['EventId'] }}</td>
-            <td><span nz-popover [nzPopoverContent]="data['EventType']?.Name"
-                      nzPopoverPlacement="top">{{getEventTypeDes(data['EventType']?.Name)}}</span>
-            </td>
-            <td width="100px"><span nz-popover [nzPopoverContent]="data['EventCycleStatus']?.Name"
-                                    nzPopoverPlacement="top">{{getEventStatusDes(data['EventCycleStatus']?.Name)}}</span>
-            </td>
-            <td>{{ data['EventPublishTime'] }}</td>
-            <td>{{ data['EventFinishTime'] }}</td>
-          </tr>
-          </tbody>
-        </nz-table>
-      </ng-container>
-      <!-- </nz-spin> -->
+              </td>
+              <td>
+                <div>
+                  <span [showIcon]="false" opsCopyText>{{ data['EventId'] }}</span>
+                </div>
+              </td>
+              <td><span [nzPopoverContent]="data['EventType']?.Name" nz-popover
+                        nzPopoverPlacement="top">{{getEventTypeDes(data['EventType']?.Name)}}</span>
+              </td>
+              <td width="100px"><span [nzPopoverContent]="data['EventCycleStatus']?.Name" nz-popover
+                                      nzPopoverPlacement="top">{{getEventStatusDes(data['EventCycleStatus']?.Name)}}</span>
+              </td>
+              <td>{{ data['EventPublishTime'] }}</td>
+              <td>{{ data['EventFinishTime'] }}</td>
+              <td>
+              <span *ngIf="needAccept(data['EventCycleStatus']?.Name); else noAccept">
+                <a (click)="acceptEvent(data)">
+                  执行
+                </a>
+              </span>
+                <ng-template #noAccept>
+                <span>
+                  -
+                </span>
+                </ng-template>
+              </td>
+            </tr>
+            </tbody>
+          </nz-table>
+        </nz-tab>
+      </nz-tabset>
     </div>
   </div>
 

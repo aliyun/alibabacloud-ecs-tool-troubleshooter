@@ -4,7 +4,14 @@ import {Store} from '@ngrx/store';
 import {initializeMenuDataAction} from './ngrx/actions/menu.action';
 import {MenuGroup} from './shared/models/models';
 import {NzIconService} from 'ng-zorro-antd/icon';
-import {changeIcon, recordIcon, serviceIcon} from './shared/constants/icon.constants';
+import {
+  changeIcon,
+  diagnosticManage, healthStatus, instanceDiagnostic, instanceMonitor,
+  linuxIcon,
+  recordIcon,
+  serviceIcon,
+  windowIcon
+} from './shared/constants/icon.constants';
 
 
 const routes: Routes = [
@@ -30,6 +37,10 @@ const routes: Routes = [
   {
     path: 'event',
     loadChildren: () => import('./components/event/event.module').then(module => module.EventModule)
+  },
+  {
+    path: 'diagnostic',
+    loadChildren: () => import('./components/diagnostic-metric-set-manager/diagnostic-metric-set-manager.module').then(module => module.DiagnosticMetricSetManagerModule)
   },
   {
     path: '**',
@@ -64,7 +75,7 @@ export class AppRoutingModule {
       {
         id: 12,
         title: '客户事件',
-        path: '/event/customerEvent/',
+        path: '/event/customerEvent',
         isLeaf: true,
         iconType: 'ops:service',
         children: []
@@ -73,7 +84,7 @@ export class AppRoutingModule {
         id: 11,
         title: '实例健康状态',
         isLeaf: true,
-        iconType: 'monitor',
+        iconType: 'ops:healthStatus',
         path: '/health-status',
         children: [],
       },
@@ -81,8 +92,16 @@ export class AppRoutingModule {
         id: 10,
         title: '实例诊断',
         isLeaf: true,
-        iconType: 'monitor',
+        iconType: 'ops:instanceDiagnostic',
         path: '/customer-diagnosis',
+        children: [],
+      },
+      {
+        id: 13,
+        title: '实例诊断集管理',
+        isLeaf: true,
+        iconType: 'ops:diagnosticManage',
+        path: '/diagnostic/metricSetManager',
         children: [],
       }
 
@@ -96,6 +115,12 @@ export class AppRoutingModule {
     this.iconService.addIconLiteral('ops:record', recordIcon);
     this.iconService.addIconLiteral('ops:change', changeIcon);
     this.iconService.addIconLiteral('ops:service', serviceIcon);
+    this.iconService.addIconLiteral('ops:linux', linuxIcon);
+    this.iconService.addIconLiteral('ops:window', windowIcon);
+    this.iconService.addIconLiteral('ops:diagnosticManage', diagnosticManage);
+    this.iconService.addIconLiteral('ops:healthStatus', healthStatus);
+    this.iconService.addIconLiteral('ops:instanceDiagnostic', instanceDiagnostic);
+    this.iconService.addIconLiteral('ops:monitor', instanceMonitor);
   }
 
 }

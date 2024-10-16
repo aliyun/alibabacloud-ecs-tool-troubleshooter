@@ -15,6 +15,10 @@ export class DateUtils {
     return moment(time).utc().format("YYYY-MM-DD[T]HH:mm[Z]")
   }
 
+  public static toISOString(time: Date | number | string): string {
+    return moment(time).utc().format("YYYY-MM-DD[T]HH:mm:ss[Z]")
+  }
+
   /**
    * 返回UTC格式的字符串
    * @param time
@@ -36,6 +40,14 @@ export class DateUtils {
    */
   public static toLocalDateString(time: Date | number, format = "YYYY-MM-DD HH:mm:ss"): string {
     return moment(time).format(format);
+  }
+
+  public static addDays(time: Date, days: number): Date {
+    return moment(time).add(days, 'days').toDate();
+  }
+
+  public static addMonths(time: Date, months: number): Date {
+    return moment(time).add(months, 'months').toDate();
   }
 
 }

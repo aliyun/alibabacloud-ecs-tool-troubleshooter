@@ -1,0 +1,126 @@
+<div class="metric-set-container">
+
+  <div class="metric-set-form">
+    <div class="metric-set-form-item" nz-row>
+      <div [nzSpan]="3" class="metric-set-form-item-label" nz-col>
+        资源类型:
+      </div>
+      <div [nzSpan]="21" class="metric-set-form-item-input" nz-col>
+        <nz-select [ngModel]="resourceType"
+                   style="width: 80%">
+          <nz-option *ngFor="let data of resourceTypes"
+                     [nzLabel]="data.label"
+                     [nzValue]="data.value">
+            {{data.label}}
+          </nz-option>
+        </nz-select>
+      </div>
+    </div>
+
+    <div class="metric-set-form-item" nz-row>
+      <div [nzSpan]="3" class="metric-set-form-item-label" nz-col>
+        诊断集名称:
+      </div>
+      <div [nzSpan]="21" class="metric-set-form-item-input" nz-col>
+        <input [(ngModel)]="metricSetName" nz-input placeholder="请输入诊断指标集合名称" style="width: 80%"/>
+      </div>
+    </div>
+
+    <div class="metric-set-form-item" nz-row>
+      <div [nzSpan]="3" class="metric-set-form-item-label" nz-col>
+        诊断集描述:
+      </div>
+      <div [nzSpan]="21" class="metric-set-form-item-input" nz-col>
+        <textarea [(ngModel)]="metricSetDesc"
+                  nz-input
+                  placeholder="请输入诊断指标集合描述" rows="3" style="width: 80%">
+
+        </textarea>
+      </div>
+    </div>
+
+    <div class="metric-set-form-item" nz-row>
+      <div [nzSpan]="3" class="metric-set-form-item-label" nz-col>
+        诊断指标Id:
+      </div>
+      <div [nzSpan]="21" class="metric-set-form-item-input" nz-col>
+        <div class="metric-set-transfer">
+          <nz-transfer
+            [nzDataSource]="metricIdData"
+            [nzFilterOption]="filterOption"
+            [nzRenderList]="[renderList, renderList]"
+            nzShowSearch
+          >
+            <ng-template
+              #renderList
+              let-direction="direction"
+              let-disabled="disabled"
+              let-items
+              let-onItemSelect="onItemSelect"
+              let-onItemSelectAll="onItemSelectAll"
+              let-stat="stat"
+            >
+              <div class="metric-set-transfer-container">
+
+                <nz-table #t
+                          [nzData]="items"
+                          [nzPageSize]="5"
+                          nzSize="small">
+                  <thead>
+                  <tr>
+                    <th (nzCheckedChange)="onItemSelectAll($event)"
+                        [nzChecked]="stat.checkAll"
+                        [nzIndeterminate]="stat.checkHalf"></th>
+                    <th>诊断指标Id</th>
+                    <th>诊断指标名称</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr *ngFor="let data of t.data" style="font-size: 12px">
+                    <td
+                      (nzCheckedChange)="onItemSelect(data)"
+                      [nzChecked]="!!data.checked"
+                    ></td>
+                    <td nzBreakWord>{{data.MetricId}}</td>
+                    <td nzBreakWord>{{data.MetricName}}</td>
+                  </tr>
+                  </tbody>
+                </nz-table>
+              </div>
+            </ng-template>
+
+          </nz-transfer>
+        </div>
+      </div>
+    </div>
+
+
+    <div *ngIf="operation === 'batchCreate'" class="metric-set-form-item" nz-row>
+      <div [nzSpan]="3" class="metric-set-form-item-label" nz-col>
+        地域:
+      </div>
+      <div [nzSpan]="21" class="metric-set-form-item-input" nz-col>
+        <div>
+          <label
+            (ngModelChange)="updateAllChecked()"
+            [(ngModel)]="allChecked"
+            [nzIndeterminate]="indeterminate"
+            nz-checkbox
+          >
+            全地域
+          </label>
+        </div>
+        <nz-checkbox-group
+          (ngModelChange)="updateSingleChecked()"
+          [(ngModel)]="regionOptions"></nz-checkbox-group>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<div class="metric-set-btn">
+  <button (click)="close()" nz-button nzType="default">关闭</button>
+  <button (click)="submit()" [nzLoading]="btnLoading" nz-button nzType="primary">{{btnText}}</button>
+</div>

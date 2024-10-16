@@ -1,0 +1,66 @@
+:host {
+
+  .instance-monitor-container {
+
+    .instance-monitor-title {
+      display: flex;
+      margin-bottom: 20px;
+
+      > div:first-child {
+        flex: 1;
+      }
+
+      > div:last-child {
+        width: 30px;
+      }
+    }
+
+    .instance-monitor-content {
+
+      .instance-monitor-content-body {
+
+        .instance-monitor-content-body-row {
+          display: flex;
+          margin-bottom: 10px;
+
+          > div {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #f0f0f0;
+            margin-right: 10px;
+
+            .instance-monitor-content-body-row-chart-header {
+              line-height: 20px;
+
+              .instance-monitor-content-body-row-chart-header-left {
+                > div:first-child {
+                  font-size: 14px;
+                  font-weight: 500;
+                  overflow: hidden;
+                  color: #333333;
+                }
+
+                > div:last-child {
+                  font-size: 12px;
+                  color: #333333;
+                }
+              }
+
+            }
+          }
+
+          > div:last-child {
+            margin: 0;
+          }
+
+          .instance-monitor-content-body-row-empty{
+            position: absolute;
+            left: calc(50% - 26px);
+            top: 190px;
+          }
+        }
+      }
+    }
+
+  }
+}

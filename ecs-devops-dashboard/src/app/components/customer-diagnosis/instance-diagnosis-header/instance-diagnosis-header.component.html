@@ -1,0 +1,9 @@
+<div class="diagnosis-header-container">
+  <div class="diagnosis-header-container-content">
+    <ng-container *ngFor="let tab of tabs; index as i">
+      <div (click)="tabClick(i)" [class]="activeIndex === i ? 'diagnosis-header-container-content-active' : ''">
+        {{tab.label}}
+      </div>
+    </ng-container>
+  </div>
+</div>

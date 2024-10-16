@@ -1,0 +1,59 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '20'
+
+      - name: Create Directory
+        run: |
+          mkdir -p temp
+          mkdir -p temp/ecs-devops-dashboard
+
+      - name: Install dependencies
+        working-directory: ./ecs-devops-dashboard
+        run: npm install
+
+      - name: Build
+        working-directory: ./ecs-devops-dashboard
+        run: npm run build
+
+      - name: Copy Dashboard Files
+        run:
+          cp -r ./ecs-devops-dashboard/dist/* ./temp/ecs-devops-dashboard
+
+      - name: Upload artifact for publishing
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./temp
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+

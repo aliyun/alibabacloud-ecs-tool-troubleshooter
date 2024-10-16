@@ -50,7 +50,6 @@ export class AppComponent implements OnInit {
   initializeBodyStyle() {
     if (this.document && this.document.body) {
       this.renderer.setStyle(this.document.body, 'background-color', '#f9feffd4', RendererStyleFlags2.DashCase);
-      this.renderer.setStyle(this.document.body, 'padding-block-start', '55px', RendererStyleFlags2.DashCase);
       this.renderer.setStyle(this.document.body, 'width', 'clamp(1280px, 100%, 100vw)', RendererStyleFlags2.DashCase);
       this.renderer.setStyle(this.document.body, 'overflow', 'hidden', RendererStyleFlags2.DashCase);
       this.renderer.setStyle(this.document.body, 'overflow-x', 'auto', RendererStyleFlags2.DashCase);
@@ -79,7 +78,11 @@ export class AppComponent implements OnInit {
 
   private initRegionInfos() {
     this.ecsApiService.describeRegions().subscribe((data: any) => {
-      this.store.dispatch(initRegionInfoAction(data['Regions']))
+      const regions = data['Regions']['Region'].filter((item: any) => item.RegionId !== 'ap-south-1')
+      const regionInfo = {
+        Region: regions
+      }
+      this.store.dispatch(initRegionInfoAction(regionInfo))
     })
   }
 }

@@ -29,6 +29,7 @@ export class GlobalConstant {
   }
 
   public static readonly ACCESS_KEY_INFO_STORE_KEY = "ecs_access_info"
+  public static readonly SELECTED_REGION_INFO_STORE_KEY = "ecs_selected_region_info"
 
   public static readonly HEALTH_STATUS_MAP: any = {
     "Ok": "正常",
@@ -37,6 +38,24 @@ export class GlobalConstant {
     "InsufficientData": "数据不足",
     "NotApplicable": "不适用",
   }
+
+  public static readonly INSTANCE_MAINTENANCE_ATTR_ACTION_OPTIONS: any[] = [
+    {
+      label: '自动重启恢复',
+      value: 'AutoRecover',
+      desc: "运行中的实例发生宕机或维护后会自动重启恢复，停止状态下的实例状态将保持不变"
+    },
+    {
+      label: '自动重新部署',
+      value: 'AutoRedeploy',
+      desc: "运行中的实例发生宕机或维护后自动重新部署，本地盘数据会清空（之前为停止状态的实例状态保持不变，但本地盘数据会清空）"
+    },
+    {
+      label: '禁止重启恢复',
+      value: 'Stop',
+      desc: "运行中状态的实例发生宕机或维护后不会重启恢复，直接进入停止状态"
+    }
+  ]
 
   public static readonly INSTANCE_STATUS_MAP: any = {
     "Pending": "创建中",
@@ -56,6 +75,28 @@ export class GlobalConstant {
     "PostPaid": "按量付费",
     "PrePaid": "包年包月"
   }
+
+  public static readonly DIAGNOSTIC_METRIC_SET_TYPE: any[] = [
+    {
+      label: '阿里云公共诊断集',
+      value: 'Common'
+    },
+    {
+      label: '用户自定义诊断集',
+      value: 'User'
+    }
+  ]
+
+  public static readonly DIAGNOSTIC_RESOURCE_TYPE: any[] = [
+    {
+      label: '实例',
+      value: 'instance'
+    },
+    {
+      label: '账户',
+      value: 'account'
+    }
+  ]
 
 }
 

@@ -56,7 +56,8 @@ export const changeUrlSearchParamsAction = createAction("changeUrlSearchParams",
 export const routerLinkAction = createAction("routerLinkAction", props<{
   commands: Array<string> | string,
   queryParams?: Params,
-  openTab?: boolean
+  openTab?: boolean,
+  replaceUrl?: boolean
 }>())
 
 /**
@@ -83,4 +84,8 @@ export const changeAccessKeyAction = createAction("changeAccessKeyInfo", props<{
  */
 export const initRegionInfoAction = createAction("initRegionInfoAction", props<{
   Region: { RegionId: string, RegionEndpoint: string, LocalName: string }[]
+}>())
+
+export const saveSelectedRegionAction = createAction("saveSelectedRegionAction", props<{
+  selectedRegion: string[]
 }>())

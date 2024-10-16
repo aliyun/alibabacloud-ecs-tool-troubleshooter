@@ -16,7 +16,3 @@ export const openMenuAction = createAction("openMenuAction")
  */
 export const initializeMenuDataAction = createAction("initializeMenuDataAction", props<{ data: Array<MenuGroup> }>())
 
-/**
- * 改变侧边菜单索引
- */
-export const changeMenuSelectIndexAction = createAction("changeMenuSelectIndex", props<{ index: number }>())

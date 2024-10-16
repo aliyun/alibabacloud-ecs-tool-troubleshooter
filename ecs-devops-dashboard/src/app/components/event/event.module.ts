@@ -22,37 +22,49 @@ import {EmptyEchartsDirective} from "../../shared/directive/empty-echarts.direct
 import {NzDrawerModule} from "ng-zorro-antd/drawer";
 import {NzListModule} from "ng-zorro-antd/list";
 import {NzDividerModule} from "ng-zorro-antd/divider";
+import {NzPopconfirmModule} from "ng-zorro-antd/popconfirm";
+import {NzTabsModule} from "ng-zorro-antd/tabs";
+import { EventDistributionComponent } from './event-distribution/event-distribution.component';
+import {LetDirective} from "@ngrx/component";
+import {MapItemPositionDirective} from "../../shared/directive/map-item-position.directive";
+import {CopyTextDirective} from "../../shared/directive/copy-text.directive";
 
 
 @NgModule({
   declarations: [
-    CustomerEventComponent
+    CustomerEventComponent,
+    EventDistributionComponent
   ],
-  imports: [
-    CommonModule,
-    EventRoutingModule,
-    HttpClientModule,
-    NgxEchartsModule,
-    FormsModule,
-    NzSelectModule,
-    ReactiveFormsModule,
-    NzDatePickerModule,
-    NzIconModule,
-    NzButtonModule,
-    CardDirective,
-    NzTableModule,
-    NzSwitchModule,
-    NzInputModule,
-    NzSpinModule,
-    NzGridModule,
-    NzCardModule,
-    NzDropDownModule,
-    NzPopoverModule,
-    EmptyEchartsDirective,
-    NzDrawerModule,
-    NzListModule,
-    NzDividerModule
-  ],
+    imports: [
+        CommonModule,
+        EventRoutingModule,
+        HttpClientModule,
+        NgxEchartsModule,
+        FormsModule,
+        NzSelectModule,
+        ReactiveFormsModule,
+        NzDatePickerModule,
+        NzIconModule,
+        NzButtonModule,
+        CardDirective,
+        NzTableModule,
+        NzSwitchModule,
+        NzInputModule,
+        NzSpinModule,
+        NzGridModule,
+        NzCardModule,
+        NzDropDownModule,
+        NzPopoverModule,
+        EmptyEchartsDirective,
+        NzDrawerModule,
+        NzListModule,
+        NzDividerModule,
+        NzPopconfirmModule,
+        NzTabsModule,
+        LetDirective,
+        MapItemPositionDirective,
+        CopyTextDirective
+    ],
   providers: []
 })
 export class EventModule {

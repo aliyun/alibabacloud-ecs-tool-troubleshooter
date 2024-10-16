@@ -36,4 +36,9 @@ export class SystemUtil {
     return result;
   }
 
+
+  public static deepCopy(val: any) {
+    return JSON.parse(JSON.stringify(val));
+  }
+
 }

@@ -18,7 +18,6 @@ import {NzDividerModule} from "ng-zorro-antd/divider";
 import {NzSelectModule} from "ng-zorro-antd/select";
 import {NzTagModule} from "ng-zorro-antd/tag";
 import {NzInputModule} from "ng-zorro-antd/input";
-import {CustomerDiagnosisComponent} from "./customer-diagnosis.component";
 import {NzSpinModule} from "ng-zorro-antd/spin";
 import {NzAlertModule} from "ng-zorro-antd/alert";
 import {NzModalModule} from "ng-zorro-antd/modal";
@@ -31,49 +30,104 @@ import {NzSkeletonModule} from "ng-zorro-antd/skeleton";
 import {NzProgressModule} from "ng-zorro-antd/progress";
 import {NzGridModule} from "ng-zorro-antd/grid";
 import {NzTimelineModule} from "ng-zorro-antd/timeline";
-import {DiagnosisReportComponent} from './diagnosis-report/diagnosis-report.component';
-import {DiagnosisReportListComponent} from './diagnosis-report-list/diagnosis-report-list.component';
+import {NzToolTipModule} from "ng-zorro-antd/tooltip";
+import {InstanceDiagnosisComponent} from './instance-diagnosis/instance-diagnosis.component';
+import {InstanceStatusDescPipe} from "../../shared/pipe/instance-status-desc.pipe";
+import {LetDirective} from "@ngrx/component";
+import {InstanceDiagnosisListComponent} from './instance-diagnosis-list/instance-diagnosis-list.component';
+import {DiagnosticResourceTypePipe} from "../../shared/pipe/diagnostic-resource-type.pipe";
+import {DiagnosticReportStatusPipe} from './pipe/diagnostic-report-status.pipe';
+import {
+  InstanceDiagnosisReportDetailComponent
+} from './instance-diagnosis-report-detail/instance-diagnosis-report-detail.component';
+import {
+  InstanceDiagnosisTaskListComponent
+} from './instance-diagnosis-task-list/instance-diagnosis-task-list.component';
+import {
+  InstanceDiagnosisTaskBatchConcurrencyControlType,
+  InstanceDiagnosisTaskBatchControlType,
+  InstanceDiagnosisTaskInvokeCategoryPipe,
+  InstanceDiagnosisTaskInvokeModePipe,
+  InstanceDiagnosisTaskInvokeStatusPipe,
+  InstanceDiagnosisTaskModePipe,
+} from './pipe/instance-diagnosis-task-mode.pipe';
+import {LocalDatePipe} from "../../shared/pipe/local-date.pipe";
+import {NzDropDownModule} from "ng-zorro-antd/dropdown";
+import {NzMenuModule} from "ng-zorro-antd/menu";
+import {
+  InstanceDiagnosisTaskDetailComponent
+} from './instance-diagnosis-task-detail/instance-diagnosis-task-detail.component';
+import {NzRadioModule} from "ng-zorro-antd/radio";
+import {NzStepsModule} from "ng-zorro-antd/steps";
+import {NzInputNumberModule} from "ng-zorro-antd/input-number";
+import {NzSpaceModule} from "ng-zorro-antd/space";
+import {NzDescriptionsModule} from "ng-zorro-antd/descriptions";
+import {NzSwitchModule} from "ng-zorro-antd/switch";
+import { InstanceDiagnosisHeaderComponent } from './instance-diagnosis-header/instance-diagnosis-header.component';
 
 
 @NgModule({
-  imports: [
-    CommonModule,
-    CustomerDiagnosisRoutingModule,
-    NzSegmentedModule,
-    FormsModule,
-    ReactiveFormsModule,
-    StoreModule.forFeature("diagnose", {}),
-    EffectsModule.forFeature([]),
-    NzIconModule,
-    PanelTitleComponent,
-    CardDirective,
-    CopyTextDirective,
-    NgxEchartsModule,
-    NzDatePickerModule,
-    NzButtonModule,
-    NzTabsModule,
-    NzTableModule,
-    NzDividerModule,
-    NzSelectModule,
-    NzTagModule,
-    NzInputModule,
-    NzSpinModule,
-    NzAlertModule,
-    NzModalModule,
-    NzCheckboxModule,
-    NzCollapseModule,
-    NzEmptyModule,
-    NzListModule,
-    NzPopoverModule,
-    NzSkeletonModule,
-    NzProgressModule,
-    NzGridModule,
-    NzTimelineModule
-  ],
+    imports: [
+        CommonModule,
+        CustomerDiagnosisRoutingModule,
+        NzSegmentedModule,
+        FormsModule,
+        ReactiveFormsModule,
+        StoreModule.forFeature("diagnose", {}),
+        EffectsModule.forFeature([]),
+        NzIconModule,
+        PanelTitleComponent,
+        CardDirective,
+        CopyTextDirective,
+        NgxEchartsModule,
+        NzDatePickerModule,
+        NzButtonModule,
+        NzTabsModule,
+        NzTableModule,
+        NzDividerModule,
+        NzSelectModule,
+        NzTagModule,
+        NzInputModule,
+        NzSpinModule,
+        NzAlertModule,
+        NzModalModule,
+        NzCheckboxModule,
+        NzCollapseModule,
+        NzEmptyModule,
+        NzListModule,
+        NzPopoverModule,
+        NzSkeletonModule,
+        NzProgressModule,
+        NzGridModule,
+        NzTimelineModule,
+        NzToolTipModule,
+        InstanceStatusDescPipe,
+        LetDirective,
+        DiagnosticResourceTypePipe,
+        NzDropDownModule,
+        NzMenuModule,
+        NzRadioModule,
+        LocalDatePipe,
+        NzStepsModule,
+        NzInputNumberModule,
+        NzSpaceModule,
+        NzDescriptionsModule,
+        NzSwitchModule
+    ],
   declarations: [
-    CustomerDiagnosisComponent,
-    DiagnosisReportComponent,
-    DiagnosisReportListComponent,
+    InstanceDiagnosisComponent,
+    InstanceDiagnosisListComponent,
+    DiagnosticReportStatusPipe,
+    InstanceDiagnosisReportDetailComponent,
+    InstanceDiagnosisTaskListComponent,
+    InstanceDiagnosisTaskModePipe,
+    InstanceDiagnosisTaskInvokeModePipe,
+    InstanceDiagnosisTaskInvokeStatusPipe,
+    InstanceDiagnosisTaskInvokeCategoryPipe,
+    InstanceDiagnosisTaskBatchConcurrencyControlType,
+    InstanceDiagnosisTaskBatchControlType,
+    InstanceDiagnosisTaskDetailComponent,
+    InstanceDiagnosisHeaderComponent,
   ],
   providers: [],
   exports: []

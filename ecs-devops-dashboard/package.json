@@ -4,7 +4,7 @@
   "scripts": {
     "ng": "ng",
     "start": "npm run lint && ng serve -c=development",
-    "build": "ng build --optimization=true  --aot=true --output-hashing=none --inline-style-language=less",
+    "build": "ng build --optimization=true  --aot=true --output-hashing=none --inline-style-language=less --base-href=./",
     "watch": "ng build --watch --configuration development",
     "test": "ng test",
     "lint": "ng lint"
@@ -25,6 +25,8 @@
     "@ngrx/entity": "^16.3.0",
     "@ngrx/router-store": "^16.3.0",
     "@ngrx/store": "^16.3.0",
+    "ansi-to-html": "^0.7.2",
+    "cron-parser": "^4.9.0",
     "crypto-js": "^4.2.0",
     "echarts": "^5.4.3",
     "moment": "^2.29.4",

@@ -1,0 +1,122 @@
+<div class="instance-diagnosis-list-container">
+  <div style="margin-bottom: 20px">
+    <ops-instance-diagnosis-header></ops-instance-diagnosis-header>
+  </div>
+<!--  <div class="instance-diagnosis-list-container-title">-->
+<!--    <span (click)="backToDiagnosis()" nz-icon nzTheme="outline" nzType="arrow-left"></span>-->
+<!--    <span>诊断报告</span>-->
+<!--  </div>-->
+
+  <div class="instance-diagnosis-list-container-content">
+    <div class="instance-diagnosis-list-container-content-header">
+      <div>
+        <span>地域: </span>
+        <nz-select [(ngModel)]="regionId" style="width: 150px">
+          <ng-container *ngFor="let data of regionInfo">
+            <nz-option [nzLabel]="data.LocalName" [nzValue]="data.RegionId"></nz-option>
+          </ng-container>
+        </nz-select>
+      </div>
+      <div>
+        <nz-input-group nzCompact>
+          <nz-select [(ngModel)]="searchType" (ngModelChange)="searchTypeChange($event)">
+            <nz-option [nzLabel]="'资源ID'" [nzValue]="'resourceId'"></nz-option>
+            <nz-option [nzLabel]="'报告ID'" [nzValue]="'reportId'"></nz-option>
+          </nz-select>
+          <input [(ngModel)]="searchValue" [placeholder]="searchPlaceholder" nz-input style="width: 300px" type="text"/>
+          <button (click)="search()" nz-button nzType="primary">查询</button>
+        </nz-input-group>
+      </div>
+    </div>
+    <nz-table
+      #basicTable
+      [nzData]="reportList"
+      [nzLoading]="moreLoading && firstLoading"
+      [nzPageSize]="10000"
+      [nzScroll]="{ y: tableBodyHeight }"
+      [nzShowPagination]="false"
+      (nzQueryParams)="tableQueryParams($event)"
+    >
+      <thead>
+      <tr>
+        <th nzLeft nzWidth="260px">报告ID</th>
+        <th nzWidth="260px">资源ID</th>
+        <th nzWidth="220px">诊断集名称</th>
+        <th nzWidth="200px">诊断时间</th>
+        <th>诊断类别</th>
+        <th nzColumnKey="status" [nzFilterMultiple]="false" [nzFilters]="reportStatusFilters" [nzFilterFn]="true">诊断状态</th>
+        <th nzRight nzWidth="100px">操作</th>
+      </tr>
+      </thead>
+      <tbody>
+      <ng-container *ngFor="let item of basicTable.data">
+        <tr>
+          <td nzLeft>
+            <span [showIcon]="false" opsCopyText>{{item.ReportId}}</span>
+          </td>
+          <td>
+            <span [showIcon]="false" opsCopyText>{{item.ResourceId}}</span>
+          </td>
+          <td>
+            <div>
+              <span [showIcon]="false" opsCopyText>{{item.MetricSetId}}</span>
+            </div>
+          </td>
+          <td>{{toLocalTime(item.CreationTime)}}</td>
+          <td>{{item.ResourceType | diagnosticResourceType}}</td>
+          <td>
+            <ng-container *ngIf="item.Status === 'InProgress'">
+              <span nz-icon nzTheme="fill" nzType="loading"
+                    style="color: #00a1ff">
+              </span>
+              {{item.Status | diagnosticReportStatus}}
+            </ng-container>
+
+            <ng-container *ngIf="item.Status === 'Finished'">
+              <span *ngIf="item.Severity === 'Normal'" nz-icon nzTheme="fill" nzType="check-circle"
+                    style="color: #39A503"></span>
+              <span *ngIf="item.Severity === 'Info'" nz-icon nzTheme="fill"
+                    nzType="exclamation-circle" style="color: rgb(0, 112, 204)"></span>
+              <span *ngIf="item.Severity === 'Warn'" nz-icon nzTheme="fill" nzType="exclamation-circle"
+                    style="color: #F9C757"></span>
+              <span *ngIf="item.Severity === 'Critical'" nz-icon nzTheme="fill" nzType="exclamation-circle"
+                    style="color: red"></span>
+              <span>
+                {{item.Severity === 'Warn' ? '警告' : item.Severity === 'Critical' ? '严重' : '通过'}}
+              </span>
+            </ng-container>
+
+            <ng-container *ngIf="item.Status === 'Failed'">
+                <span nz-icon nzTheme="fill" nzType="close-circle"
+                      style="color: #ff0000">
+                </span>
+              {{item.Status | diagnosticReportStatus}}
+            </ng-container>
+          </td>
+          <td nzRight>
+            <a (click)="reportDetail(item)">
+              查看报告
+            </a>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="basicTable.data.length > 0">
+        <tr>
+          <td colspan="6">
+            <div class="instance-diagnosis-list-container-content-footer">
+              <div *ngIf="nextToken !== ''">
+                <nz-spin [nzSpinning]="moreLoading">
+                  <span (click)="getMoreData()" style="color: #3e94ff; cursor: pointer">点击加载更多</span>
+                </nz-spin>
+              </div>
+              <div *ngIf="nextToken === ''">
+                到底了，没有更多数据了~
+              </div>
+            </div>
+          </td>
+        </tr>
+      </ng-container>
+      </tbody>
+    </nz-table>
+  </div>
+</div>

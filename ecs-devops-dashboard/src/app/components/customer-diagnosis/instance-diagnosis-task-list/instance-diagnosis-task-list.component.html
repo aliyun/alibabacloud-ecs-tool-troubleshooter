@@ -1,0 +1,210 @@
+<div class="instance-diagnosis-task-container">
+  <div style="margin-bottom: 20px">
+    <ops-instance-diagnosis-header></ops-instance-diagnosis-header>
+  </div>
+<!--  <div class="instance-diagnosis-task-container-title">-->
+<!--    <span (click)="backToDiagnosis()" nz-icon nzTheme="outline" nzType="arrow-left"></span>-->
+<!--    <span>诊断任务管理</span>-->
+<!--  </div>-->
+
+  <div class="instance-diagnosis-task-container-content">
+    <div>
+      <div class="instance-diagnosis-task-container-content-header">
+        <div>
+          <span>地域: </span>
+          <nz-select [(ngModel)]="regionId" style="width: 150px">
+            <ng-container *ngFor="let data of regionInfo">
+              <nz-option [nzLabel]="data.LocalName" [nzValue]="data.RegionId"></nz-option>
+            </ng-container>
+          </nz-select>
+        </div>
+        <div>
+          <nz-input-group nzCompact>
+            <nz-select (ngModelChange)="searchTypeChange($event)" [(ngModel)]="searchType" style="width: 100px">
+              <nz-option [nzLabel]="'执行ID'" [nzValue]="'executionId'"></nz-option>
+              <nz-option [nzLabel]="'资源ID'" [nzValue]="'resourceId'"></nz-option>
+              <nz-option [nzLabel]="'执行父ID'" [nzValue]="'executionParentId'"></nz-option>
+            </nz-select>
+            <input [(ngModel)]="searchValue" [placeholder]="searchPlaceholder" nz-input style="width: 300px"
+                   type="text"/>
+            <button (click)="search()" nz-button nzType="primary">查询</button>
+          </nz-input-group>
+        </div>
+        <div>
+          <span>任务类型: </span>
+          <nz-select (ngModelChange)="taskTemplateChange($event)"
+                     [(ngModel)]="taskTemplate" style="width: 170px">
+            <ng-container *ngFor="let s of taskTemplateOptions">
+              <nz-option [nzLabel]="s.label" [nzValue]="s.value"></nz-option>
+            </ng-container>
+          </nz-select>
+        </div>
+        <div>
+          <span>执行状态: </span>
+          <nz-select (ngModelChange)="searchStatusChange($event)"
+                     [(ngModel)]="searchStatus" style="width: 110px">
+            <nz-option nzLabel="全部" nzValue=""></nz-option>
+            <ng-container *ngFor="let s of taskStatus">
+              <nz-option [nzLabel]="s.label" [nzValue]="s.value"></nz-option>
+            </ng-container>
+          </nz-select>
+        </div>
+      </div>
+    </div>
+    <div>
+      <nz-table #basicTable
+                [nzData]="diagnosticTaskListData"
+                [nzLoading]="tableLoading && moreDataLoading"
+                [nzPageSize]="100000"
+                [nzScroll]="{ x: '800px' }"
+                [nzShowPagination]="false">
+        <thead>
+        <tr>
+          <th nzLeft nzWidth="270px">执行ID</th>
+          <th>任务类型</th>
+<!--          <th>执行模式</th>-->
+          <th>执行状态</th>
+          <th>执行类型</th>
+          <th>最近执行状态</th>
+          <th>开始时间</th>
+          <th>结束时间</th>
+          <th nzRight nzWidth="180px">操作</th>
+        </tr>
+        </thead>
+        <tbody>
+        <ng-container *ngFor="let data of basicTable.data">
+          <tr>
+            <td nzLeft>
+              <span [showIcon]="false" opsCopyText>
+                <a (click)="detailTask(data)">{{data.ExecutionId}}</a>
+              </span>
+            </td>
+            <td>
+              {{data.TemplateName | diagnosticMode}}
+            </td>
+<!--            <td>-->
+<!--              {{data.Mode | taskInvokeMode}}-->
+<!--            </td>-->
+            <td>
+              <div>
+                <ng-container *ngTemplateOutlet="statusTemp; context: {status: data.Status}"></ng-container>
+                <span>
+                  {{data.Status | taskStatus}}
+                </span>
+              </div>
+            </td>
+            <td>
+              {{data.Category | taskInvokeCategory}}
+            </td>
+            <td>
+              <div>
+                <ng-container *ngTemplateOutlet="statusTemp; context: {status: data.LastTriggerStatus}"></ng-container>
+                <span>
+                  {{data.LastTriggerStatus | taskStatus}}
+                </span>
+              </div>
+            </td>
+            <td>
+              {{data.StartDate | localDate}}
+            </td>
+            <td>
+              {{data.EndDate | localDate}}
+            </td>
+            <td nzRight>
+              <div class="instance-diagnosis-task-container-content-operation">
+                <ng-container *ngTemplateOutlet="operationTemp; context: {data: data}">
+                </ng-container>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+        <ng-container *ngIf="basicTable.data.length > 0">
+          <tr>
+            <td colspan="9">
+              <div class="instance-diagnosis-task-container-content-footer">
+                <div *ngIf="nextToken !== ''">
+                  <nz-spin [nzSpinning]="moreDataLoading">
+                    <span (click)="getMoreData()" style="color: #3e94ff; cursor: pointer">点击加载更多</span>
+                  </nz-spin>
+                </div>
+                <div *ngIf="nextToken === ''">
+                  到底了，没有更多数据了~
+                </div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+        </tbody>
+      </nz-table>
+    </div>
+  </div>
+</div>
+
+<ng-template #operationTemp let-data="data">
+
+  <ng-container *ngrxLet="getCurrentOperationBtn(data) as operations">
+    <ng-container *ngFor="let d of operations; let i = index">
+      <span *ngIf="i < 3">
+        <ng-container *ngIf="d.type !== 'delete';else deleteTemp">
+           <a (click)="operationTask(d.type, data)">
+            {{d.label}}
+          </a>
+        </ng-container>
+        <ng-template #deleteTemp>
+          <a (click)="operationTask(d.type, data)" *ngIf="canDelete(data)">
+            {{d.label}}
+          </a>
+          <span *ngIf="!canDelete(data)" nz-tooltip nzTooltipTitle="不能删除运行中的执行，请先取消该执行后重试"
+                style="cursor: not-allowed;color: rgba(0,0,0,.25)">
+            {{d.label}}
+          </span>
+        </ng-template>
+      </span>
+    </ng-container>
+    <span *ngIf="operations.length > 3">
+      <a [nzDropdownMenu]="menu" nz-dropdown nz-tooltip nzTooltipTitle="更多设置" nzTrigger="click">
+        <span nz-icon nzTheme="outline" nzType="more"></span>
+      </a>
+      <span>
+        <nz-dropdown-menu #menu="nzDropdownMenu">
+          <ul nz-menu>
+            <ng-container *ngFor="let d of operations; let i = index">
+              <li *ngIf="i >= 3" nz-menu-item>
+                <ng-container *ngIf="d.type !== 'delete';else deleteTemp">
+                   <a (click)="operationTask(d.type, data)">
+                    {{d.label}}
+                  </a>
+                </ng-container>
+                <ng-template #deleteTemp>
+                  <a (click)="operationTask(d.type, data)" *ngIf="canDelete(data)">
+                    {{d.label}}
+                  </a>
+                  <span *ngIf="!canDelete(data)" nz-tooltip nzTooltipTitle="不能删除运行中的执行，请先取消该执行后重试"
+                        style="cursor: not-allowed; color: rgba(0,0,0,.25)">
+                    {{d.label}}
+                  </span>
+                </ng-template>
+              </li>
+            </ng-container>
+
+          </ul>
+        </nz-dropdown-menu>
+      </span>
+    </span>
+  </ng-container>
+
+</ng-template>
+
+<ng-template #statusTemp let-status="status">
+  <span *ngIf="status === 'Running'" nz-icon nzTheme="outline" nzType="loading" style="color: #0064c8"></span>
+  <span *ngIf="status === 'Success'" nz-icon nzTheme="fill" nzType="check-circle" style="color: #090"></span>
+  <span *ngIf="status === 'Failed'" nz-icon nzTheme="outline" nzType="close-circle" style="color: red"></span>
+  <span *ngIf="status === 'Waiting'" nz-icon nzTheme="outline" nzType="clock-circle" style="color: #090"></span>
+  <span *ngIf="status === 'Cancelled'" nz-icon nzTheme="fill" nzType="minus-circle" style="color: #fdb814"></span>
+  <span *ngIf="status === 'Pending'" nz-icon nzTheme="fill" nzType="clock-circle" style="color: #333"></span>
+  <span *ngIf="status === 'Queued'" nz-icon nzTheme="outline" nzType="loading" style="color: #0064c8"></span>
+
+  <!--  <span *ngIf="status === 'Started'" nz-icon nzTheme="outline" nzType="check-circle" style="color: #5aef15"></span>-->
+  <!--  <span *ngIf="status === 'Queued'" nz-icon nzTheme="outline" nzType="check-circle" style="color: #5aef15"></span>-->
+  <!--  <span *ngIf="status === 'Skipped'" nz-icon nzTheme="outline" nzType="close-circle" style="color: #5aef15"></span>-->
+</ng-template>

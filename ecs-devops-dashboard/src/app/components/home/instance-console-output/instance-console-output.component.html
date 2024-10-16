@@ -1,0 +1,15 @@
+<div class="instance-c-container">
+
+  <nz-spin [nzSpinning]="loading" nzTip="获取实例系统命令行输出中...">
+    <div class="instance-c-tips">
+      <span nz-icon nzTheme="outline" nzType="exclamation-circle" style="color: #ffd813"></span>
+      <span>
+        实例最近一次启动、重启或者关机时的系统命令行输出
+      </span>
+    </div>
+    <div [innerHTML]="output"
+         [ngClass]="{'instance-c-content': !loading}">
+    </div>
+  </nz-spin>
+
+</div>

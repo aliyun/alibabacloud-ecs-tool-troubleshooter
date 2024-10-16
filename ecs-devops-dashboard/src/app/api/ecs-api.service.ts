@@ -1,10 +1,10 @@
 import {DestroyRef, inject, Injectable} from "@angular/core";
-import {BaseApiRequest} from "../shared/models/models";
-import {HttpClient} from "@angular/common/http";
+import {BaseApiRequest, ERROR_SILENT} from "../shared/models/models";
+import {HttpClient, HttpContext} from "@angular/common/http";
 import {AliYunClientService} from "../services/aliyun-client.service";
 import {Store} from "@ngrx/store";
 import {AliYunClientConfig} from "../services/config/aliyun-client-config";
-import {selectAccessKeyInfo, selectRegionInfo} from "../ngrx/selectors/global.select";
+import {selectAccessKeyInfo, selectAllRegionInfo} from "../ngrx/selectors/global.select";
 
 
 /**
@@ -27,10 +27,11 @@ export class EcsApiService {
       "2014-05-26",
       "ecs",
       (regionId: string) => {
-        if (regionId) {
+        if (regionId && regionId !== "cn-hangzhou") {
           return this.regionInfo[regionId]
         }
-        return "ecs.aliyuncs.com";
+        // default
+        return "ecs.cn-hangzhou.aliyuncs.com";
       })
 
 
@@ -43,7 +44,7 @@ export class EcsApiService {
 
     this.ecsClient = new AliYunClientService(httpClient, clientConfig)
 
-    const regionSubscribe = this.store.select(selectRegionInfo).subscribe((data: {
+    const regionSubscribe = this.store.select(selectAllRegionInfo).subscribe((data: {
       RegionId: string,
       RegionEndpoint: string,
       LocalName: string
@@ -178,5 +179,135 @@ export class EcsApiService {
     return this.ecsClient.sendRequest("DescribeDiagnosticReportAttributes", params)
   }
 
+  /**
+   * 接收并授权执行事件操作
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/AcceptInquiredSystemEvent
+   */
+  public acceptInquiredSystemEvent(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("AcceptInquiredSystemEvent", params)
+  }
+
+  /**
+   * 批量查询实例维护属性
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/DescribeInstanceMaintenanceAttributes
+   */
+  public describeInstanceMaintenanceAttributes(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("DescribeInstanceMaintenanceAttributes", params)
+  }
+
+  /**
+   * 批量修改实例维护属性
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/ModifyInstanceMaintenanceAttributes
+   */
+  public modifyInstanceMaintenanceAttributes(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("ModifyInstanceMaintenanceAttributes", params)
+  }
+
+  /**
+   * 查询诊断指标集
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/DescribeDiagnosticMetricSets
+   */
+  public describeDiagnosticMetricSets(params: BaseApiRequest) {
+    const context = new HttpContext()
+    // 查询用户诊断指标 error silent
+    if (params && params['Type'] && params['Type'] === "User") {
+      context.set(ERROR_SILENT, true)
+    }
+    return this.ecsClient.sendRequest("DescribeDiagnosticMetricSets", params, context)
+  }
+
+  /**
+   * 创建诊断指标集
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/CreateDiagnosticMetricSet
+   */
+  public createDiagnosticMetricSets(params: BaseApiRequest) {
+    return this.ecsClient.sendPostRequest("CreateDiagnosticMetricSet", params)
+  }
+
+  /**
+   * 修改诊断指标集
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/ModifyDiagnosticMetricSet
+   */
+  public modifyDiagnosticMetricSets(params: BaseApiRequest) {
+    return this.ecsClient.sendPostRequest("ModifyDiagnosticMetricSet", params)
+  }
+
+  /**
+   * 删除诊断指标集
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/DeleteDiagnosticMetricSets
+   */
+  public deleteDiagnosticMetricSets(params: BaseApiRequest) {
+    return this.ecsClient.sendPostRequest("DeleteDiagnosticMetricSets", params)
+  }
+
+  /**
+   * 查询诊断指标
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/DescribeDiagnosticMetrics
+   */
+  public describeDiagnosticMetrics(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("DescribeDiagnosticMetrics", params)
+  }
+
+  /**
+   * 查询实例截图
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/GetInstanceScreenshot
+   */
+  public getInstanceScreenshot(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("GetInstanceScreenshot", params)
+  }
+
+  /**
+   * 查询实例控制台输出
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/GetInstanceConsoleOutput
+   */
+  public getInstanceConsoleOutput(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("GetInstanceConsoleOutput", params)
+  }
+
+  /**
+   * 查询云助手状态
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/DescribeCloudAssistantStatus
+   */
+  public describeCloudAssistantStatus(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("DescribeCloudAssistantStatus", params)
+  }
+
+  /**
+   * 运行命令
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/RunCommand
+   */
+  public runCommand(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("RunCommand", params)
+  }
+
+  /**
+   * 停止实例
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/StopInstance
+   */
+  public stopInstance(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("StopInstance", params)
+  }
+
+  /**
+   * 查询实例监控信息
+   * @param params
+   * @link https://next.api.aliyun.com/api/Ecs/2014-05-26/DescribeInstanceMonitorData
+   */
+  public describeInstanceMonitorData(params: BaseApiRequest) {
+    return this.ecsClient.sendRequest("DescribeInstanceMonitorData", params)
+  }
 
 }

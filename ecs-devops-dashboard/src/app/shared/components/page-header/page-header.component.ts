@@ -1,6 +1,6 @@
 import {ChangeDetectionStrategy, Component, inject, OnInit} from '@angular/core';
 import {CommonModule, NgOptimizedImage} from '@angular/common';
-import {akSettingVisible, selectAccessKeyInfo, selectUrl} from 'src/app/ngrx/selectors/global.select';
+import {selectUrl} from 'src/app/ngrx/selectors/global.select';
 import {NzAvatarModule} from 'ng-zorro-antd/avatar';
 import {NzBadgeModule} from 'ng-zorro-antd/badge';
 import {NzIconModule, NzIconService} from 'ng-zorro-antd/icon';
@@ -19,11 +19,8 @@ import {SearchBlockComponent} from '../search-block/search-block.component';
 import {NzDrawerModule} from "ng-zorro-antd/drawer";
 import {NzFormModule} from "ng-zorro-antd/form";
 import {NzButtonModule} from "ng-zorro-antd/button";
-import {
-  changeAccessKeyAction,
-  closeAccessKeySettingAction, displayWarningMessage,
-  openAccessKeySettingAction
-} from "../../../ngrx/actions/global.action";
+import {NzModalService} from "ng-zorro-antd/modal";
+import {PageSettingComponent} from "../page-setting/page-setting.component";
 
 @Component({
   selector: 'ops-page-header',
@@ -39,16 +36,13 @@ export class PageHeaderComponent implements OnInit {
 
   private iconService = inject(NzIconService);
 
+  private nzModalService = inject(NzModalService)
+
   public showMenuIcon = this.store.select(selectUrl).pipe(
     map(url => {
       return url !== '/';
     })
   )
-
-  public settingVisible = this.store.select(akSettingVisible)
-
-  public ak = ''
-  public sk = ''
 
   ngOnInit(): void {
     this.iconService.addIconLiteral('ops:return', returnIcon);
@@ -71,34 +65,16 @@ export class PageHeaderComponent implements OnInit {
 
 
   settingOpen() {
-    this.ak = ""
-    this.sk = ""
-
-    this.store.select(selectAccessKeyInfo).subscribe(data=>{
-      this.ak = data.accessKeyId
-      this.sk = data.accessKeySecret
+    this.nzModalService.create({
+      nzTitle: '设置',
+      nzContent: PageSettingComponent,
+      nzWidth: 800,
+      nzMaskClosable: false,
+      nzClosable: false,
+      nzOkText: null,
+      nzCancelText: null,
+      nzFooter: null
     })
-    this.store.dispatch(openAccessKeySettingAction())
-  }
-
-  settingClose() {
-    this.store.dispatch(closeAccessKeySettingAction())
-  }
-
-  settingSave() {
-    // 校验 ak sk 是否都存在
-    if (!this.ak && this.sk){
-      // 提示 ak 不能为空
-      this.store.dispatch(displayWarningMessage({content: "accessKeyId 不能为空"}))
-      return
-    }
-    if (!this.sk && this.ak){
-      // 提示 sk 不能为空
-      this.store.dispatch(displayWarningMessage({content: "accessKeySecret 不能为空"}))
-      return
-    }
-    this.store.dispatch(changeAccessKeyAction({accessKeyId: this.ak, accessKeySecret: this.sk}))
-    this.store.dispatch(closeAccessKeySettingAction())
   }
 
 }

@@ -5,10 +5,16 @@ import {Params} from "@angular/router";
 import {Store} from '@ngrx/store';
 import {CustomerEventEffectService} from '../service/effects/customer-event-effect.service';
 import {selectCustomerEventUrlParam} from '../ngrx/selectors/custom.event.select';
-import {changeUrlSearchParamsAction, displayWarningMessage} from 'src/app/ngrx/actions/global.action';
+import {
+  changeUrlSearchParamsAction,
+  displayErrorMessage,
+  displaySuccessMessage,
+  displayWarningMessage
+} from 'src/app/ngrx/actions/global.action';
 import {EventStatus, GlobalConstant} from 'src/app/constants/constants';
 import {EChartsOption} from "echarts";
 import {selectRegionInfo} from "../../../ngrx/selectors/global.select";
+import {NzModalService} from "ng-zorro-antd/modal";
 
 
 @Component({
@@ -22,6 +28,7 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store,
     private customerEventEffectService: CustomerEventEffectService,
+    private model: NzModalService
   ) {
   }
 
@@ -34,6 +41,8 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
   public eventType: string[] = [];
   public currentDate: Date[] = EventCenterConstant.getDefaultSearchTime();
   public readonly tableDataObservable = this.customerEventEffectService.getTableData;
+
+  public selectedIndex = 0
 
   public readonly acceptInquiredOpsCodes = Object.keys(GlobalConstant.EVENT_TYPES).map(key => {
     return {key, value: GlobalConstant.EVENT_TYPES[key]}
@@ -97,24 +106,24 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
 
 
   ngOnInit(): void {
-    // 获取URL中的参数
     const subscription = this.store.select(selectCustomerEventUrlParam).subscribe(queryParams => {
-      // 释放订阅资源，相当于进入页面只获取一次URL参数
       Promise.resolve().then(() => subscription.unsubscribe()).then(() => {
         this.instanceId = queryParams.instanceId;
         this.endTime = queryParams.endTime;
         this.startTime = queryParams.startTime;
         this.eventType = queryParams.eventType;
         this.eventStatus = queryParams.eventStatus;
-        this.region = queryParams.regionId
+        this.region = queryParams.regionId || ""
+        if (this.region) {
+          this.selectedIndex = 1
+        }
 
-        // 时间默认 1个月
         if (this.startTime && this.endTime) {
           this.currentDate = EventCenterConstant.getDefaultSearchTime(this.startTime, this.endTime);
         } else {
           this.currentDate = EventCenterConstant.getDefaultSearchTime();
         }
-        this.findVmOpsEvents();
+        this.search();
       })
     })
 
@@ -122,6 +131,7 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
 
   changeUrlParam() {
     const queryParams: Params = {
+      regionId: this.region,
       instanceId: this.instanceId,
       eventType: this.eventType,
       eventStatus: this.eventStatus,
@@ -137,6 +147,11 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
 
   search() {
     this.instanceId = this.instanceId ? this.instanceId.trim() : ""
+    if (this.region) {
+      this.selectedIndex = 1
+    } else {
+      this.selectedIndex = 0
+    }
     this.findVmOpsEvents();
   }
 
@@ -174,6 +189,12 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
     this.eventStatus = [];
     this.currentDate = EventCenterConstant.getDefaultSearchTime();
     this.timeOk();
+  }
+
+  mapItemClick(data: any) {
+    this.region = data
+    this.selectedIndex = 1
+    this.search()
   }
 
   timeOk() {
@@ -334,6 +355,34 @@ export class CustomerEventComponent implements OnInit, OnDestroy {
     ],
     series: []
   };
+
+  public needAccept(val: string) {
+    return val === 'Inquiring' || val === 'Scheduled'
+  }
+
+  public acceptEvent(event: any) {
+    this.model.confirm({
+      nzTitle: '是否接受并授权执行系统事件',
+      nzContent: '事件Id: <b style="color: red;">' + event.EventId + '</b>',
+      nzOnOk: () => {
+        this.sendAcceptEvent(event)
+      }
+    })
+  }
+
+  private sendAcceptEvent(event: any) {
+    this.customerEventEffectService.acceptEvent({
+      EventId: event.EventId,
+      RegionId: event.RegionId
+    }).subscribe(data => {
+      if (data == null) {
+        this.store.dispatch(displayErrorMessage({content: '操作执行失败'}));
+        return;
+      }
+      this.store.dispatch(displaySuccessMessage({content: '操作执行成功'}));
+      this.search()
+    })
+  }
 
 
   ngOnDestroy(): void {

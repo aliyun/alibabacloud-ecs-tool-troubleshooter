@@ -16,6 +16,7 @@ export class CopyTextDirective implements OnInit, OnDestroy {
 
   @Input() copyWay: 'inner' | 'input' = 'inner';
   @Input() opsCopyText?: string;
+  @Input() showIcon = true
 
   ngOnInit(): void {
     new Promise(() => {
@@ -29,6 +30,15 @@ export class CopyTextDirective implements OnInit, OnDestroy {
     this.renderer.appendChild(parent, span)
     const svg = span.firstChild;
     if (svg) {
+      if (!this.showIcon){
+        this.eventCallBackList.push(this.renderer.listen(parent, "mouseover", () => {
+          this.renderer.setStyle(span, "display", "inline-block")
+        }))
+        this.eventCallBackList.push(this.renderer.listen(parent, "mouseout", () => {
+          this.renderer.setStyle(span, "display", "none")
+        }))
+      }
+
       this.eventCallBackList.push(this.renderer.listen(span, "mouseover", () => {
         this.renderer.setStyle(svg, "fill", this.lightFillColor)
         this.renderer.setStyle(svg, "cursor", "pointer")
@@ -66,15 +76,15 @@ export class CopyTextDirective implements OnInit, OnDestroy {
       svg.style.width = '16px';
       svg.style.fill = this.fillColor;
       svg.style.position = 'absolute'
-      svg.style.top = '-11px'
       svg.style.left = '2px'
-
-      span.style.display = 'inline-block'
-      span.style.verticalAlign = 'middle'
-      span.style.position = 'relative'
-      svg.style.width = '16px';
       svg.style.height = '16px';
 
+      span.style.display = this.showIcon ? 'inline-block': "none"
+      span.style.verticalAlign = 'middle'
+      span.style.position = 'relative'
+      span.style.top = '2px'
+      span.style.width = '20px'
+      span.style.height = '20px'
     }
     return span.cloneNode(true);
   }

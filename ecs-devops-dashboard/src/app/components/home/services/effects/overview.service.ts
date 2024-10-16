@@ -7,6 +7,8 @@ import {selectRegionInfo} from "../../../../ngrx/selectors/global.select";
 import {EcsApiService} from "../../../../api/ecs-api.service";
 import {catchError, EMPTY, from, Observable, of, tap} from "rxjs";
 import {DateUtils} from "../../../../utils/date.utils";
+import * as moment from "moment/moment";
+import {SystemUtil} from "../../../../utils/utils";
 
 @Injectable()
 export class OverviewService extends ComponentStore<any> {
@@ -85,6 +87,16 @@ export class OverviewService extends ComponentStore<any> {
         spinning: false,
         value: [],
         error: null
+      },
+      instanceMaintenanceAttr: {
+        spinning: false,
+        value: {},
+        error: null
+      },
+      instanceMonitor: {
+        spinning: false,
+        value: [],
+        error: null
       }
 
     })
@@ -140,7 +152,7 @@ export class OverviewService extends ComponentStore<any> {
       }
     })
     this.patchState({resourceData: {spinning: true, value: [], error: null}})
-
+    this.patchState({images: {spinning: true, value: [], error: null}})
     this.patchState({regionHealthStatus: {spinning: true, value: {}, error: null}})
     this.patchState({
       healthStatusChart: {
@@ -161,7 +173,9 @@ export class OverviewService extends ComponentStore<any> {
       }
     })
 
+    this.patchState({instanceFullStatus: {spinning: true, value: {}, error: null}})
     this.patchState({eventInfo: {spinning: true, value: [], error: null}})
+    this.patchState({instanceMaintenanceAttr: {spinning: true, value: {}, error: null}})
     this.patchState({
       eventChart: {
         spinning: true,
@@ -180,6 +194,114 @@ export class OverviewService extends ComponentStore<any> {
         error: null
       }
     })
+  }
+
+
+  private readonly loadAllInstanceMaintenanceAttr = this.effect((ob: Observable<{
+    regionId: string,
+    value: any[]
+  }[]>) => {
+    return ob.pipe(
+      switchMap(param => {
+        const requestParams =
+          param.filter(item => item.value.length > 0)
+            .map((item: any) => {
+              const instanceIds = item.value.map((i: any) => {
+                return i.InstanceId
+              })
+              return {
+                RegionId: item.regionId,
+                InstanceId: instanceIds
+              }
+            })
+
+        return from(requestParams).pipe(
+          mergeMap((item: any) => {
+            item.PageSize = 100;
+            item.PageNumber = 1;
+            return this.loadInstanceMaintenanceAttr(item)
+          }),
+          reduce((v1: any, v2) => {
+            v1[v2.regionId] = v2.value
+            return v1
+          }, {}),
+          tap({
+            next: value => {
+              this.patchState({
+                instanceMaintenanceAttr: {
+                  spinning: false,
+                  value: value,
+                  error: null
+                }
+              })
+            },
+            error: error => {
+              console.log(`query instance maintenance attr error: ` + error)
+              this.patchState({
+                instanceMaintenanceAttr: {
+                  spinning: false,
+                  value: {},
+                  error: "query instance maintenance attr error"
+                }
+              })
+            }
+          })
+        )
+      })
+    )
+  })
+
+  private chunkArray<T>(array: T[], size: number): T[][] {
+    if (array.length === 0) {
+      return [];
+    }
+
+    const chunks: T[][] = [];
+    let i = 0;
+    while (i < array.length) {
+      chunks.push(array.slice(i, i + size));
+      i += size;
+    }
+    return chunks;
+  }
+
+  public loadInstanceMaintenanceAttr(param: { RegionId: string, InstanceId: string[], [key: string]: any }) {
+
+    // 切割 instanceIds 大小
+    const chunks = this.chunkArray(param.InstanceId, 100);
+    param.InstanceId = []
+
+    return from(chunks).pipe(
+      mergeMap((item: any) => {
+        param.InstanceId = item
+        return this.ecsApiService.describeInstanceMaintenanceAttributes(param).pipe(
+          map((val: any) => {
+            return (val['MaintenanceAttributes']['MaintenanceAttribute'] as [])
+          }),
+          catchError(err => {
+            console.log(`query instance maintenance attr error`, err)
+            return of([]);
+          })
+        )
+      }),
+      reduce((v1: any[], v2) => {
+        v1 = v1.concat(v2)
+        return v1
+      }, []),
+      map(item => {
+        return {
+          regionId: param.RegionId,
+          value: item
+        }
+      }),
+      catchError(err => {
+        console.log(`query instance maintenance attr error`, err)
+        return of({
+          regionId: param.RegionId,
+          value: []
+        })
+      })
+    )
   }
 
 
@@ -219,6 +341,7 @@ export class OverviewService extends ComponentStore<any> {
               // 统计信息
               this.calculateStatisticsData(value)
               this.loadResourceData(value)
+              this.loadAllInstanceMaintenanceAttr(value)
             },
             error: error => {
               console.log(error)
@@ -231,11 +354,12 @@ export class OverviewService extends ComponentStore<any> {
   })
 
   private loadInstanceData(param: { RegionId: string, [key: string]: any }) {
+    param['MaxResults'] = 100
     return this.ecsApiService.describeInstances(param).pipe(
       expand((value: any) => {
         if (value['NextToken']) {
           param['NextToken'] = value['NextToken']
-          param['PageNumber'] = value['PageNumber'] + 1
+          param['MaxResults'] = 100
           return this.ecsApiService.describeInstances(param)
         } else {
           return EMPTY
@@ -304,7 +428,7 @@ export class OverviewService extends ComponentStore<any> {
   private loadImages(param: { RegionId: string, [key: string]: any }) {
     return this.ecsApiService.describeImages(param).pipe(
       expand((value: any) => {
-        if (value['TotalCount'] - value.PageNumber * value.pageSize > 0) {
+        if (value['TotalCount'] - value.PageNumber * value.PageSize > 0) {
           param['PageNumber'] = value['PageNumber'] + 1
           return this.ecsApiService.describeImages(param)
         } else {
@@ -312,7 +436,7 @@ export class OverviewService extends ComponentStore<any> {
         }
       }, 1),
       takeWhile((value: any) => {
-        return value['TotalCount'] - value.PageNumber * value.pageSize > 0
+        return value['TotalCount'] - value.PageNumber * value.PageSize > 0
       }, true),
       reduce((v1: [], v2: any) => {
         const values = (v2['Images']['Image'] as []);
@@ -360,6 +484,7 @@ export class OverviewService extends ComponentStore<any> {
             },
             error: error => {
               console.log(error)
+              this.patchState({instanceFullStatus: {spinning: false, value: {}, error: null}})
             }
           })
         )
@@ -370,7 +495,7 @@ export class OverviewService extends ComponentStore<any> {
   private loadInstanceFullStatus(param: { RegionId: string, [key: string]: any }) {
     return this.ecsApiService.describeInstanceFullStatus(param).pipe(
       expand((value: any) => {
-        if (value['TotalCount'] - value.PageNumber * value.pageSize > 0) {
+        if (value['TotalCount'] - value.PageNumber * value.PageSize > 0) {
           param['PageNumber'] = value['PageNumber'] + 1
           return this.ecsApiService.describeInstanceFullStatus(param)
         } else {
@@ -378,7 +503,7 @@ export class OverviewService extends ComponentStore<any> {
         }
       }, 1),
       takeWhile((value: any) => {
-        return value['TotalCount'] - value.PageNumber * value.pageSize > 0
+        return value['TotalCount'] - value.PageNumber * value.PageSize > 0
       }, true),
       reduce((v1: [], v2: any) => {
         const value: [] = (v2['InstanceFullStatusSet']['InstanceFullStatusType'] as []);
@@ -439,7 +564,7 @@ export class OverviewService extends ComponentStore<any> {
   private loadDisks(param: { RegionId: string, [key: string]: any }) {
     return this.ecsApiService.describeDisks(param).pipe(
       expand((value: any) => {
-        if (value['TotalCount'] - value.PageNumber * value.pageSize > 0) {
+        if (value['TotalCount'] - value.PageNumber * value.PageSize > 0) {
           param['PageNumber'] = value['PageNumber'] + 1
           return this.ecsApiService.describeDisks(param)
         } else {
@@ -447,7 +572,7 @@ export class OverviewService extends ComponentStore<any> {
         }
       }, 1),
       takeWhile((value: any) => {
-        return value['TotalCount'] - value.PageNumber * value.pageSize > 0
+        return value['TotalCount'] - value.PageNumber * value.PageSize > 0
       }, true),
       reduce((v1: [], v2: any) => {
         const value = (v2['Disks']['Disk'] as []);
@@ -512,7 +637,7 @@ export class OverviewService extends ComponentStore<any> {
   private loadEvent(param: { RegionId: string, [key: string]: any }) {
     return this.ecsApiService.describeInstanceHistoryEvents(param).pipe(
       expand((value: any) => {
-        if (value['TotalCount'] - value.PageNumber * value.pageSize > 0) {
+        if (value['TotalCount'] - value.PageNumber * value.PageSize > 0) {
           param['PageNumber'] = value['PageNumber'] + 1
           return this.ecsApiService.describeInstanceHistoryEvents(param)
         } else {
@@ -520,7 +645,7 @@ export class OverviewService extends ComponentStore<any> {
         }
       }, 1),
       takeWhile((value: any) => {
-        return value['TotalCount'] - value.PageNumber * value.pageSize > 0
+        return value['TotalCount'] - value.PageNumber * value.PageSize > 0
       }, true),
       reduce((v1: [], v2: any) => {
         const value = (v2['InstanceSystemEventSet']['InstanceSystemEventType'] as []);
@@ -539,6 +664,15 @@ export class OverviewService extends ComponentStore<any> {
           regionId: param.RegionId,
           value: []
         })
+      })
+    )
+  }
+
+  public modifyInstanceMaintenanceAttr(param: any) {
+    return this.ecsApiService.modifyInstanceMaintenanceAttributes(param).pipe(
+      catchError(err => {
+        console.log(`modifyInstanceMaintenanceAttr`, err)
+        return of(null)
       })
     )
   }
@@ -847,6 +981,256 @@ export class OverviewService extends ComponentStore<any> {
     )
   })
 
+  public getInstanceScreenSnapshot(param: {
+    RegionId: string,
+    InstanceId: string,
+    WakeUp?: boolean
+  }) {
+    return this.ecsApiService.getInstanceScreenshot(param).pipe(
+      catchError(error => {
+        console.log(error)
+        return of(null)
+      })
+    )
+  }
+
+  public getInstanceConsoleOutput(param: {
+    RegionId: string,
+    InstanceId: string,
+    RemoveSymbols?: boolean
+  }) {
+    return this.ecsApiService.getInstanceConsoleOutput(param).pipe(
+      catchError(error => {
+        console.log(error)
+        return of(null)
+      })
+    )
+  }
+
+  public readonly loadInstanceMonitorData = this.effect((ob: Observable<{
+    RegionId: string,
+    InstanceId: string,
+    StartTime: string,
+    EndTime: string,
+    Period: number
+  }>) => {
+    return ob.pipe(
+      tap(() => {
+        this.patchState({instanceMonitor: {spinning: true, value: [], error: null}})
+      }),
+      switchMap((params: any) => {
+        return this.ecsApiService.describeInstanceMonitorData(params).pipe(
+          catchError(error => {
+            console.log(error)
+            return of(null)
+          })
+        )
+      }),
+      tapResponse({
+        next: (value: any) => {
+          this.patchState({
+            instanceMonitor: {
+              spinning: false,
+              value: value?.MonitorData?.InstanceMonitorData || [],
+              error: null
+            }
+          })
+        },
+        error: error => {
+          console.log(error)
+          this.patchState({instanceMonitor: {spinning: false, value: [], error: null}})
+        }
+      })
+    )
+  })
+
+  public readonly instanceMonitorData = this.select(state => {
+
+    const bpsReadData: any[] = []
+    const bpsWriteData: any[] = []
+    const cpuData: any[] = []
+
+    const cpuCredit: any = {
+      CPUCreditUsage: [],
+      CPUCreditBalance: []
+    }
+
+    const IOPSInfo: any = {
+      IOPSWrite: [],
+      IOPSRead: []
+    }
+
+    const intranetInfo: any = {
+      IntranetTX: [],
+      IntranetRX: []
+    }
+
+    const internetInfo: any = {
+      InternetTX: [],
+      InternetRX: []
+    }
+
+
+    for (let i = 0; i < state.instanceMonitor.value.length; i++) {
+      const item = state.instanceMonitor.value[i];
+      bpsReadData.push([new Date(item.TimeStamp).getTime(), item.BPSRead || 0])
+      bpsWriteData.push([new Date(item.TimeStamp).getTime(), item.BPSWrite || 0])
+      cpuData.push([new Date(item.TimeStamp).getTime(), item.CPU || 0])
+
+      intranetInfo.IntranetRX.push([new Date(item.TimeStamp).getTime(), item.IntranetRX || 0])
+      intranetInfo.IntranetTX.push([new Date(item.TimeStamp).getTime(), item.IntranetTX || 0])
+
+      internetInfo.InternetTX.push([new Date(item.TimeStamp).getTime(), item.InternetTX || 0])
+      internetInfo.InternetRX.push([new Date(item.TimeStamp).getTime(), item.InternetRX || 0])
+
+      IOPSInfo.IOPSWrite.push([new Date(item.TimeStamp).getTime(), item.IOPSWrite || 0])
+      IOPSInfo.IOPSRead.push([new Date(item.TimeStamp).getTime(), item.IOPSRead || 0])
+
+      cpuCredit.CPUCreditBalance.push([new Date(item.TimeStamp).getTime(), item.CPUCreditBalance || 0])
+      cpuCredit.CPUCreditUsage.push([new Date(item.TimeStamp).getTime(), item.CPUCreditUsage || 0])
+    }
+
+    const baseInfo = {
+      spinning: state.instanceMonitor.spinning,
+      options: {
+        title: {
+          text: ''
+        },
+        tooltip: {
+          trigger: 'axis'
+        },
+        series: [],
+        xAxis: {
+          type: 'time',
+          axisLabel: {
+            formatter: (value: any) => {
+              value = moment(value).format('YYYY-MM-DD')
+              if (value) {
+                const array = value.split("-")
+                return `{time|${array[1]}/${array[2]}}\n{year|${array[0]}}`
+              }
+              return value
+            }
+          }
+        },
+        yAxis: {
+          type: 'value'
+        }
+      },
+      isEmpty: state.instanceMonitor.value.length === 0
+    }
+
+    const intranetTXInfo: any = SystemUtil.deepCopy(baseInfo)
+    intranetTXInfo.options.series = [
+      {
+        name: '内网流出带宽',
+        data: intranetInfo.IntranetTX,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3,
+      }
+    ]
+
+    const intranetRXInfo: any = SystemUtil.deepCopy(baseInfo)
+    intranetRXInfo.options.series = [
+      {
+        name: '内网流入带宽',
+        data: intranetInfo.IntranetRX,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.1
+      }
+    ]
+
+    const internetTXInfo: any = SystemUtil.deepCopy(baseInfo)
+    internetTXInfo.options.series = [
+      {
+        name: '公网流出带宽',
+        data: internetInfo.InternetTX,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      }
+    ]
+
+    const IOPSChart: any = SystemUtil.deepCopy(baseInfo)
+    IOPSChart.options.series = [
+      {
+        name: '(ECS)所以磁盘每秒读取次数',
+        data: IOPSInfo.IOPSRead,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      },
+      {
+        name: '(ECS)所以磁盘每秒写入次数',
+        data: IOPSInfo.IOPSWrite,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      }
+    ]
+
+    const cpuInfo: any = SystemUtil.deepCopy(baseInfo)
+    cpuInfo.options.series = [
+      {
+        name: '(ECS)CPU使用率',
+        data: cpuData,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      }
+    ]
+
+    const bpsInfo: any = SystemUtil.deepCopy(baseInfo)
+    bpsInfo.options.series = [
+      {
+        name: '(ECS)所以磁盘写入BPS',
+        data: bpsWriteData,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      },
+      {
+        name: '(ECS)所以磁盘读取BPS',
+        data: bpsReadData,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      }
+    ]
+
+    const cpuCreditInfo: any = SystemUtil.deepCopy(baseInfo)
+    cpuCreditInfo.options.series = [
+      {
+        name: '突发性能实例积分总数',
+        data: cpuCredit.CPUCreditBalance,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      },
+      {
+        name: '突发性能实例已使用的积分数',
+        data: cpuCredit.CPUCreditUsage,
+        type: 'line',
+        showSymbol: false,
+        smooth: 0.3
+      }
+    ]
+
+    const res: any = {
+      cpu: cpuInfo,
+      bps: bpsInfo,
+      intranetTXInfo: intranetTXInfo,
+      intranetRXInfo: intranetRXInfo,
+      internetTXInfo: internetTXInfo,
+      ioInfo: IOPSChart,
+      cpuCreditInfo: cpuCreditInfo,
+    }
+    return res
+  })
+
+
   public readonly statisticsData = this.select(state => {
 
       // impaired 数量
@@ -892,126 +1276,170 @@ export class OverviewService extends ComponentStore<any> {
     return state.regionInfo.value
   })
 
-  public readonly resourceData = this.select(state => {
-    // 处理value 添加镜像信息等
-    let value: any[] = []
-    // 镜像数据统计
-    const regionImages: any = {}
-    for (let j = 0; j < state.images.value.length; j++) {
-      const item = state.images.value[j];
-      regionImages[item.regionId] = item.value.length
-    }
-    // 磁盘数据统计
-    const regionDisks: any = {}
-    for (let j = 0; j < state.diskInfo.value.length; j++) {
-      const item = state.diskInfo.value[j];
-      regionDisks[item.regionId] = item.value.length
-    }
-    // 事件数据统计
-    const regionEvents: any = {}
-    for (let j = 0; j < state.eventInfo.value.length; j++) {
-      const item = state.eventInfo.value[j];
-      regionEvents[item.regionId] = item.value.length
-    }
-    if (state.resourceData.value && state.resourceData.value.length > 0) {
-      for (let i = 0; i < state.resourceData.value.length; i++) {
-        const regionInfo = state.resourceData.value[i]
-        const regionHealthStatus = state.regionHealthStatus.value[regionInfo.regionId]
-        let count = 0
-        if (regionHealthStatus && regionHealthStatus['Impaired'] && regionHealthStatus['Impaired']['value'] > 0) {
-          count = regionHealthStatus['Impaired'].value
+  public readonly resourceData = this.select(
+    this.select(state => state.images),
+    this.select(state => state.diskInfo),
+    this.select(state => state.eventInfo),
+    this.select(state => state.resourceData),
+    this.select(state => state.regionHealthStatus),
+    this.select(state => state.instanceFullStatus),
+    this.select(state => state.instanceMaintenanceAttr),
+    (images, diskInfo, eventInfo, resourceData, regionHealthStatus, instanceFullStatus, instanceMaintenanceAttr) => {
+      const state = {
+        images,
+        diskInfo,
+        eventInfo,
+        resourceData,
+        regionHealthStatus,
+        instanceFullStatus,
+        instanceMaintenanceAttr
+      }
+      // 处理value 添加镜像信息等
+      let value: any[] = []
+      // 镜像数据统计
+      const regionImages: any = {}
+      for (let j = 0; j < state.images.value.length; j++) {
+        const item = state.images.value[j];
+        regionImages[item.regionId] = item.value.length
+      }
+      // 磁盘数据统计
+      const regionDisks: any = {}
+      for (let j = 0; j < state.diskInfo.value.length; j++) {
+        const item = state.diskInfo.value[j];
+        regionDisks[item.regionId] = item.value.length
+      }
+      // 事件数据统计
+      const regionEvents: any = {}
+      for (let j = 0; j < state.eventInfo.value.length; j++) {
+        const item = state.eventInfo.value[j];
+        regionEvents[item.regionId] = item.value.length
+      }
+      if (state.resourceData.value && state.resourceData.value.length > 0) {
+        for (let i = 0; i < state.resourceData.value.length; i++) {
+          const regionInfo = state.resourceData.value[i]
+          const regionHealthStatus = state.regionHealthStatus.value[regionInfo.regionId]
+          let count = 0
+          if (regionHealthStatus && regionHealthStatus['Impaired'] && regionHealthStatus['Impaired']['value'] > 0) {
+            count = regionHealthStatus['Impaired'].value
+          }
+          value.push({
+            expand: false,
+            ...regionInfo,
+            imagesCount: regionImages[regionInfo.regionId] || 0,
+            impairedCount: count,
+            diskCount: regionDisks[regionInfo.regionId] || 0,
+            eventCount: regionEvents[regionInfo.regionId] || 0
+          })
         }
-        value.push({
-          expand: false,
-          ...regionInfo,
-          imagesCount: regionImages[regionInfo.regionId] || 0,
-          impairedCount: count,
-          diskCount: regionDisks[regionInfo.regionId] || 0,
-          eventCount: regionEvents[regionInfo.regionId] || 0
-        })
+      }
+      // 只展示有数据的地域
+      value = value.filter(item => item.instanceCount > 0 || item.imagesCount > 0 || item.diskCount > 0)
+      return {
+        spinning: state.resourceData.spinning ||
+          state.images.spinning ||
+          state.diskInfo.spinning ||
+          state.eventInfo.spinning ||
+          state.instanceMaintenanceAttr.spinning ||
+          state.instanceFullStatus.spinning,
+        value: value,
+        error: state.resourceData.error
       }
     }
-    // 只展示有数据的地域
-    value = value.filter(item => item.instanceCount > 0 || item.imagesCount > 0 || item.diskCount > 0)
-    return {
-      spinning: state.resourceData.spinning || state.instanceFullStatus.spinning,
-      value: value,
-      error: state.resourceData.error
-    }
-  })
+  )
 
-  public readonly instanceData = this.select(state => {
-    const res: any = {}
+  public readonly instanceData = this.select(
+    this.select(state => state.instanceData),
+    this.select(state => state.instanceFullStatus),
+    this.select(state => state.instanceMaintenanceAttr),
+    (instanceData, instanceFullStatus, instanceMaintenanceAttrs) => {
 
-    if (state.instanceData.value) {
-      for (let i = 0; i < state.instanceData.value.length; i++) {
-        const {regionId, value} = state.instanceData.value[i];
-        const fullStatus = state.instanceFullStatus.value[regionId] || []
-        const instanceStatus: any = {}
-        fullStatus.forEach((item: any) => {
-          instanceStatus[item.InstanceId] = {
-            name: item.HealthStatus.Name,
-            desc: GlobalConstant.HEALTH_STATUS_MAP[item.HealthStatus.Name] || item.HealthStatus.Name
-          }
-        })
+      const res: any = {}
 
-        for (let j = 0; j < value.length; j++) {
-          // 数据处理
-          const instance = value[j];
-          instance.HealthStatus = instanceStatus[instance.InstanceId] || {name: '', desc: '/'}
-          instance.StatusDesc = GlobalConstant.INSTANCE_STATUS_MAP[instance.Status] || instance.Status
-          instance.InstanceNetworkTypeDesc = GlobalConstant.INTERNET_TYPE_MAP[instance.InstanceNetworkType] || instance.InstanceNetworkType
-          instance.CreationTimeLocal = DateUtils.toLocalDateString(instance.CreationTime)
-          instance.InstanceChargeTypeDesc = GlobalConstant.INSTANCE_CHARGE_TYPE_MAP[instance.InstanceChargeType] || instance.InstanceChargeType
-
-          // 如果超过 1GiB 按照1GiB 显示
-          if (instance.Memory / 1024 > 0) {
-            instance._MemoryInfo = {
-              memory: instance.Memory / 1024,
-              unit: 'GiB'
+      if (instanceData.value) {
+        for (let i = 0; i < instanceData.value.length; i++) {
+          const {regionId, value} = instanceData.value[i];
+          const fullStatus = instanceFullStatus.value[regionId] || []
+          const fullMaintenanceAttr = instanceMaintenanceAttrs.value[regionId] || []
+          const instanceStatus: any = {}
+          const instanceMaintenanceAttr: any = {}
+          fullStatus.forEach((item: any) => {
+            instanceStatus[item.InstanceId] = {
+              name: item.HealthStatus.Name,
+              desc: GlobalConstant.HEALTH_STATUS_MAP[item.HealthStatus.Name] || item.HealthStatus.Name
             }
-          } else {
-            instance._MemoryInfo = {
-              memory: instance.Memory,
-              unit: 'MiB'
+          })
+
+          fullMaintenanceAttr.forEach((item: any) => {
+            instanceMaintenanceAttr[item.InstanceId] = {
+              ...item,
+              spinning: false
             }
-          }
+          })
+
+          for (let j = 0; j < value.length; j++) {
+            // 数据处理
+            const instance = value[j];
+            instance.MaintenanceAttr = instanceMaintenanceAttr[instance.InstanceId] || {}
+            instance.HealthStatus = instanceStatus[instance.InstanceId] || {name: '', desc: '/'}
+            instance.StatusDesc = GlobalConstant.INSTANCE_STATUS_MAP[instance.Status] || instance.Status
+            instance.InstanceNetworkTypeDesc = GlobalConstant.INTERNET_TYPE_MAP[instance.InstanceNetworkType] || instance.InstanceNetworkType
+            instance.CreationTimeLocal = DateUtils.toLocalDateString(instance.CreationTime)
+            if (instance.AutoReleaseTime != null && instance.AutoReleaseTime != '') {
+              instance.AutoReleaseTimeLocal = DateUtils.toLocalDateString(instance.AutoReleaseTime)
+            } else {
+              instance.AutoReleaseTimeLocal = ""
+            }
+            instance.InstanceChargeTypeDesc = GlobalConstant.INSTANCE_CHARGE_TYPE_MAP[instance.InstanceChargeType] || instance.InstanceChargeType
+
+            // 如果超过 1GiB 按照1GiB 显示
+            if (instance.Memory / 1024 > 0) {
+              instance._MemoryInfo = {
+                memory: instance.Memory / 1024,
+                unit: 'GiB'
+              }
+            } else {
+              instance._MemoryInfo = {
+                memory: instance.Memory,
+                unit: 'MiB'
+              }
+            }
 
 
-          instance._IpAddress = []
-          // eip
-          if (instance.EipAddress && instance.EipAddress.IpAddress) {
-            instance._IpAddress.push({
-              address: instance.EipAddress.IpAddress,
-              desc: "弹性"
-            })
-          }
-          // public ip
-          if (instance.PublicIpAddress && instance.PublicIpAddress.IpAddress && instance.PublicIpAddress.IpAddress.length > 0) {
-            for (let l = 0; l < instance.PublicIpAddress.IpAddress.length; l++) {
+            instance._IpAddress = []
+            // eip
+            if (instance.EipAddress && instance.EipAddress.IpAddress) {
               instance._IpAddress.push({
-                address: instance.PublicIpAddress.IpAddress[l],
-                desc: "公有"
+                address: instance.EipAddress.IpAddress,
+                desc: "弹性"
               })
             }
-          }
+            // public ip
+            if (instance.PublicIpAddress && instance.PublicIpAddress.IpAddress && instance.PublicIpAddress.IpAddress.length > 0) {
+              for (let l = 0; l < instance.PublicIpAddress.IpAddress.length; l++) {
+                instance._IpAddress.push({
+                  address: instance.PublicIpAddress.IpAddress[l],
+                  desc: "公有"
+                })
+              }
+            }
 
-          // 获取主要的 内网IP
-          for (let k = 0; k < instance.NetworkInterfaces.NetworkInterface.length; k++) {
-            const network = instance.NetworkInterfaces.NetworkInterface[k];
-            if (network.Type == 'Primary') {
-              instance._IpAddress.push({
-                address: network.PrimaryIpAddress,
-                desc: "私有"
-              })
+            // 获取主要的 内网IP
+            for (let k = 0; k < instance.NetworkInterfaces.NetworkInterface.length; k++) {
+              const network = instance.NetworkInterfaces.NetworkInterface[k];
+              if (network.Type == 'Primary') {
+                instance._IpAddress.push({
+                  address: network.PrimaryIpAddress,
+                  desc: "私有"
+                })
+              }
             }
           }
+          res[regionId] = value
         }
-        res[regionId] = value
       }
+      return res
     }
-    return res
-  })
+  )
 
 
 }

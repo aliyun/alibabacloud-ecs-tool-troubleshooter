@@ -61,10 +61,33 @@
     grid-template-columns: repeat(3, 1fr);
   }
 
+  .resource-nested-content{
+    position: relative;
+
+    .resource-nested-table-operation-btn{
+      position: absolute;
+      left: 0;
+      bottom: 16px;
+      height: 32px;
+      line-height: 32px;
+      button{
+        margin-right: 10px;
+      }
+    }
+
+    .resource-nested-table-more-setting-disabled{
+      cursor: not-allowed;
+      color: #aeaeae
+    }
+  }
 }
 
-// 设置嵌套表内宽度 避免内容 撑开 导致 nzScroll 不生效
-.resource-nested-table{
-  //width: calc(100% - 134px);
-  min-width: 1300px;
+.instance-operation-btn{
+  width: 150px;
+
+  .ant-dropdown-menu-item{
+    width: 150px;
+  }
 }
+
+

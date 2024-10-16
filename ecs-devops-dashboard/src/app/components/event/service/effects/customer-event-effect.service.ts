@@ -173,7 +173,7 @@ export class CustomerEventEffectService extends ComponentStore<any> {
   private loadEvent(param: { RegionId: string, [key: string]: any }) {
     return this.ecsApiService.describeInstanceHistoryEvents(param).pipe(
       expand((value: any) => {
-        if (value['TotalCount'] - value.PageNumber * value.pageSize > 0) {
+        if (value['TotalCount'] - value.PageNumber * value.PageSize > 0) {
           param['PageNumber'] = value['PageNumber'] + 1
           return this.ecsApiService.describeInstanceHistoryEvents(param)
         } else {
@@ -181,7 +181,7 @@ export class CustomerEventEffectService extends ComponentStore<any> {
         }
       }, 1),
       takeWhile((value: any) => {
-        return value['TotalCount'] - value.PageNumber * value.pageSize > 0
+        return value['TotalCount'] - value.PageNumber * value.PageSize > 0
       }, true),
       reduce((v1: [], v2: any) => {
         const value = (v2['InstanceSystemEventSet']['InstanceSystemEventType'] as []);
@@ -406,6 +406,15 @@ export class CustomerEventEffectService extends ComponentStore<any> {
       })
     )
   })
+
+  public acceptEvent(request: any){
+    return this.ecsApiService.acceptInquiredSystemEvent(request).pipe(
+      catchError(err => {
+        console.log(`accept event error`, err)
+        return of(null)
+      })
+    )
+  }
 
   /**
    * 获取本地Table状态

@@ -27,12 +27,16 @@ import {
   accessKeyReducer,
   accessKeySettingVisibleReducer,
   globalSearchReducer,
-  regionInfoReducer,
+  regionInfoReducer, saveSelectedRegionReducer,
 } from './ngrx/reducers/global.reducer';
 import {NzDrawerModule} from 'ng-zorro-antd/drawer';
 import {SidebarMenuComponent} from './shared/components/sidebar-menu/sidebar-menu.component';
-import {menuDataReducer, menuSelectIndexReducer, menuVisibleReducer} from './ngrx/reducers/menu.reducrt';
+import {menuDataReducer, menuVisibleReducer} from './ngrx/reducers/menu.reducrt';
 import {StaticDataInterceptor} from "./shared/services/interceptors/static-data.interceptor";
+import { PageSettingComponent } from './shared/components/page-setting/page-setting.component';
+import {NzTabsModule} from "ng-zorro-antd/tabs";
+import {NzInputModule} from "ng-zorro-antd/input";
+import {NzCheckboxModule} from "ng-zorro-antd/checkbox";
 
 registerLocaleData(zh);
 
@@ -46,14 +50,15 @@ const reducerMap = {
   menuVisible: menuVisibleReducer,
   menuData: menuDataReducer,
   akSettingVisible: accessKeySettingVisibleReducer,
-  menuSelectIndex: menuSelectIndexReducer,
   accessKeyInfo: accessKeyReducer,
-  regionInfo: regionInfoReducer
+  regionInfo: regionInfoReducer,
+  selectedRegionInfo: saveSelectedRegionReducer
 }
 
 @NgModule({
   declarations: [
     AppComponent,
+    PageSettingComponent
   ],
   imports: [
     BrowserModule,
@@ -74,7 +79,10 @@ const reducerMap = {
     NzMessageModule,
     NzModalModule,
     NzDrawerModule,
-    SidebarMenuComponent
+    SidebarMenuComponent,
+    NzTabsModule,
+    NzInputModule,
+    NzCheckboxModule
   ],
   providers: [
     {provide: NZ_I18N, useValue: zh_CN},

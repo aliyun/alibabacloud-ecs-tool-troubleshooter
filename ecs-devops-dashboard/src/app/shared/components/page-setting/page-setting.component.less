@@ -1,0 +1,51 @@
+:host {
+  .setting-container {
+
+    /deep/ .ant-tabs-tab {
+      padding: 8px 12px 8px 0;
+      margin-top: 0;
+    }
+
+    .setting-ak-tips {
+      font-size: 12px;
+      display: flex;
+      background-color: #fff9d9;
+      padding: 8px;
+      line-height: normal
+    }
+
+    .setting-region {
+      overflow: scroll;
+      height: 260px;
+
+      /deep/ .ant-checkbox-group-item {
+        span:nth-child(2) {
+          font-size: 12px;
+        }
+      }
+    }
+
+
+    .setting-input {
+      margin-top: 10px;
+
+      .setting-input-label {
+        height: 32px;
+        line-height: 32px;
+        display: block;
+      }
+
+      input {
+        width: 400px;
+      }
+    }
+
+    .setting-footer {
+      text-align: right;
+      padding-top: 10px;
+      margin-top: 10px;
+      border-top: 1px solid #f0f0f0;
+    }
+  }
+
+}

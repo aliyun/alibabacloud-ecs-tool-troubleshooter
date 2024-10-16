@@ -9,6 +9,7 @@ import {
   displaySuccessMessage,
   displayWarningMessage,
   routerLinkAction,
+  saveSelectedRegionAction,
 } from '../../../ngrx/actions/global.action';
 import {concatMap, EMPTY, from, of, tap, withLatestFrom} from 'rxjs';
 import {NzModalRef, NzModalService} from 'ng-zorro-antd/modal';
@@ -53,6 +54,25 @@ export class GlobalEffectService {
             console.log(`parse store error`)
           }
           this.store.dispatch(changeAccessKeyAction(accessKeyInfo))
+        }
+      })
+    );
+  }, {dispatch: false});
+
+  effectSelectedRegion$ = createEffect(() => {
+    return this.actions.pipe(
+      ofType(ROOT_EFFECTS_INIT),
+      tap(() => {
+        // 加载配置信息
+        const info = window.localStorage.getItem(GlobalConstant.SELECTED_REGION_INFO_STORE_KEY);
+        if (info) {
+          let selectedRegionInfo: any = {}
+          try {
+            selectedRegionInfo = JSON.parse(info)
+          } catch (e) {
+            console.log(`parse store error`)
+          }
+          this.store.dispatch(saveSelectedRegionAction(selectedRegionInfo))
         }
       })
     );
@@ -172,11 +192,14 @@ export class GlobalEffectService {
             const urlTree = this.router.createUrlTree(commands, {queryParams: param.queryParams})
             UrlUtils.openWindow(urlTree);
           } else {
+            const extras: any = {}
             if (param.queryParams) {
-              this.router.navigate(commands, {queryParams: param.queryParams})
-            } else {
-              this.router.navigate(commands);
+              extras.queryParams = param.queryParams
             }
+            if (param.replaceUrl === true) {
+              extras.replaceUrl = true
+            }
+            this.router.navigate(commands, extras);
           }
         }
       })
@@ -205,4 +228,13 @@ export class GlobalEffectService {
     )
   }, {dispatch: false})
 
+
+  selectedRegionInfoChange = createEffect(() => {
+    return this.actions.pipe(
+      ofType(saveSelectedRegionAction),
+      tap((param) => {
+        window.localStorage.setItem(GlobalConstant.SELECTED_REGION_INFO_STORE_KEY, JSON.stringify(param))
+      })
+    )
+  }, {dispatch: false})
 }

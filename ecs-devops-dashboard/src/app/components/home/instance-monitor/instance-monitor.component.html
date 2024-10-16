@@ -1,0 +1,209 @@
+<div class="instance-monitor-container">
+  <div class="instance-monitor-title">
+    <div>
+      <nz-radio-group (ngModelChange)="timeRangeChange($event)" [(ngModel)]="timeRange">
+        <ng-container *ngFor="let item of timeRangeList">
+          <label [nzValue]="item.value" nz-radio-button>{{item.label}}</label>
+        </ng-container>
+      </nz-radio-group>
+    </div>
+    <div>
+      <button (click)="refresh()" nz-button nzType="default">
+        <span nz-icon nzTheme="outline" nzType="reload"></span>
+      </button>
+    </div>
+  </div>
+  <div class="instance-monitor-content">
+    <div class="instance-monitor-content-header">
+
+    </div>
+    <div class="instance-monitor-content-body">
+      <ng-container *ngrxLet="instanceMonitorData | async as chartData">
+        <div class="instance-monitor-content-body-row">
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>CPU使用率 (%)</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.cpu?.spinning">
+              <div style="position:relative;">
+                <div [autoResize]="true" [merge]="chartData?.cpu?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+                </div>
+                <div *ngIf="!chartData?.cpu?.spinning && chartData?.cpu?.isEmpty"
+                     class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>内网流入带宽 (bits/s)</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.intranetRXInfo?.spinning">
+              <div style="position:relative;">
+                <div [autoResize]="true" [merge]="chartData?.intranetRXInfo?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+                </div>
+                <div *ngIf="!chartData?.intranetRXInfo?.spinning && chartData?.intranetRXInfo?.isEmpty" class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>内网流出带宽 (bits/s)</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.intranetTXInfo?.spinning">
+              <div style="position:relative;">
+                <div [autoResize]="true" [merge]="chartData?.intranetTXInfo?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+                </div>
+                <div *ngIf="!chartData?.intranetTXInfo?.spinning && chartData?.intranetTXInfo?.isEmpty" class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+        </div>
+
+        <div class="instance-monitor-content-body-row">
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>公网流出带宽使用率 (%)</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.internetTXInfo?.spinning">
+              <div style="position:relative;">
+                <div [autoResize]="true" [merge]="chartData?.internetTXInfo?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+                </div>
+                <div *ngIf="!chartData?.internetTXInfo?.spinning && chartData?.internetTXInfo?.isEmpty" class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>磁盘读取写入BPS (bytes/s)</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.bps?.spinning">
+              <div style="position:relative;">
+                <div [autoResize]="true" [merge]="chartData?.bps?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+                </div>
+                <div *ngIf="!chartData?.bps?.spinning && chartData?.bps?.isEmpty" class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>磁盘读取写入IOPS (Count/Second)</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.ioInfo?.spinning">
+              <div style="position:relative;">
+                <div [autoResize]="true" [merge]="chartData?.ioInfo?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+                </div>
+                <div *ngIf="!chartData?.ioInfo?.spinning && chartData?.ioInfo?.isEmpty" class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+        </div>
+        <div class="instance-monitor-content-body-row">
+          <div>
+            <div class="instance-monitor-content-body-row-chart-header">
+              <div class="instance-monitor-content-body-row-chart-header-left">
+                <div>CPU 突发性能实例积分</div>
+                <div>周期: {{getPeriod()}}</div>
+              </div>
+              <div class="instance-monitor-content-body-row-chart-header-right">
+
+              </div>
+            </div>
+            <nz-spin [nzSpinning]="chartData?.cpuCreditInfo?.spinning">
+              <div style="position: relative">
+                <div [autoResize]="true" [merge]="chartData?.cpuCreditInfo?.options"
+                     [options]="baseLineOptions"
+                     echarts
+                     style="width: 100%;">
+
+                </div>
+                <div *ngIf="!chartData?.cpuCreditInfo?.spinning && chartData?.cpuCreditInfo?.isEmpty"
+                     class="instance-monitor-content-body-row-empty">
+                  暂无数据
+                </div>
+              </div>
+            </nz-spin>
+          </div>
+
+          <div style="border: none">
+
+          </div>
+
+          <div style="border: none">
+
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+</div>
+

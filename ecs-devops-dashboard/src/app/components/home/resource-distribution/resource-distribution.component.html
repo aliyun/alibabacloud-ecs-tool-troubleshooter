@@ -1,0 +1,75 @@
+<div class="resource-distribution-container">
+  <nz-spin [nzSpinning]="loading">
+    <div #mapContainer class="resource-distribution-container-img">
+      <img alt="" src="assets/map.png">
+    </div>
+
+    <div class="resource-distribution-content">
+      <ng-container *ngFor="let data of regionData; ">
+        <div [height]="mapContainer.clientHeight"
+             [nzPopoverContent]="contentTemplate"
+             [regionId]="data.RegionId"
+             [width]="mapContainer.clientWidth"
+             (click)="pointClick(data.RegionId)"
+             class="resource-distribution-content-item"
+             nz-popover
+             nzPopoverTrigger="hover"
+             opsMapItemPosition
+        >
+<!--          <div *ngIf="!hasValue(data.RegionId)" class="resource-distribution-content-item-spot">-->
+<!--            <ng-container *ngTemplateOutlet="naturalCoordinateSpot;"></ng-container>-->
+<!--          </div>-->
+
+          <div *ngIf="hasValue(data.RegionId)" class="resource-distribution-content-item-spot">
+            <ng-container *ngTemplateOutlet="naturalCoordinateSpot;"></ng-container>
+          </div>
+
+          <div *ngIf="hasValue(data.RegionId)">
+            <div class="resource-distribution-content-item-font">{{data.LocalName}}</div>
+          </div>
+          <ng-template #contentTemplate>
+            <ng-container *ngrxLet="getInstanceData(data.RegionId) as instanceInfo">
+              <div class="resource-distribution-content-item-detail">
+                <div>
+                  <div>云服务器</div>
+                  <div style="color: #0070CC">{{instanceInfo.instanceCount || 0}}</div>
+                </div>
+                <div>
+                  <div>运行中</div>
+                  <div style="color: #39A503">{{instanceInfo.runningCount || 0}}</div>
+                </div>
+                <div>
+                  <div>受损</div>
+                  <div style="color: #E72525;">{{instanceInfo.impairedCount || 0}}</div>
+                </div>
+                <div>
+                  <div>已停止</div>
+                  <div>{{instanceInfo.stoppedCount || 0}}</div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-template>
+        </div>
+      </ng-container>
+    </div>
+  </nz-spin>
+</div>
+
+<!--正常地域点位-->
+<ng-template #naturalCoordinateSpot>
+  <img alt="图片"
+       height="19.3" src="assets/map_natural_coordinate_spot.png" width="14">
+</ng-template>
+
+<!--选中地域点位-->
+<ng-template #checkedCoordinateSpot>
+  <img alt="图片"
+       height="25.3" src="assets/map_checked_coordinate_spot.png" width="19">
+
+</ng-template>
+
+<!--异常地域点位-->
+<ng-template #errorCoordinateSpot>
+  <img alt="图片"
+       height="17" src="assets/map_error_coordinate_spot.png" width="17">
+</ng-template>

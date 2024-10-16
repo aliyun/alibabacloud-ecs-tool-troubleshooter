@@ -4,7 +4,8 @@ import {
   closeAccessKeySettingAction,
   globalSearchAction,
   initRegionInfoAction,
-  openAccessKeySettingAction
+  openAccessKeySettingAction,
+  saveSelectedRegionAction
 } from "../actions/global.action";
 
 export const initialAliUidState = '';
@@ -38,6 +39,13 @@ export const accessKeyReducer = createReducer(
 export const regionInfoReducer = createReducer(
   {},
   on(initRegionInfoAction, (state, params) => {
+    return params
+  })
+)
+
+export const saveSelectedRegionReducer = createReducer(
+  {},
+  on(saveSelectedRegionAction, (state, params) => {
     return params
   })
 )

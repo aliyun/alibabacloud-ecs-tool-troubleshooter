@@ -1,18 +1,18 @@
 <div>
   <div class="health-top">实例健康状态</div>
   <div class="search-div">
-    <div nz-row class="content-top">
+    <div class="content-top" nz-row>
       <div class="health-input" nz-col nzSpan="8">
         <span>起止时间：</span>
         <nz-range-picker
-          [nzShowTime]="{ nzFormat: 'HH:mm' }" style="vertical-align: bottom;"
-          nzFormat="yyyy-MM-dd HH:mm" [(ngModel)]="dateRange"
-          (nzOnOk)="timeOk()"></nz-range-picker>
+          (nzOnOk)="timeOk()" [(ngModel)]="dateRange"
+          [nzShowTime]="{ nzFormat: 'HH:mm' }" nzFormat="yyyy-MM-dd HH:mm"
+          style="vertical-align: bottom;"></nz-range-picker>
       </div>
       <div nz-col nzSpan="5">
         <span>地域：</span>
-        <nz-select style="width: calc(100% - 50px);" nzShowSearch [(ngModel)]="region" nzPlaceHolder="请选择地域">
-<!--          <nz-option nzLabel="全地域" nzValue="">全地域</nz-option>-->
+        <nz-select [(ngModel)]="region" nzPlaceHolder="请选择地域" nzShowSearch style="width: calc(100% - 50px);">
+          <!--          <nz-option nzLabel="全地域" nzValue="">全地域</nz-option>-->
           <nz-option *ngFor="let region of allRegionsData"
                      [nzLabel]="$any(region).LocalName"
                      [nzValue]="$any(region).RegionId">
@@ -21,81 +21,105 @@
         </nz-select>
       </div>
       <div nz-col nzSpan="4">
-        <button nz-button nzType="primary" (click)="search()">搜索</button>
-        <button nz-button nzType="default" (click)="reset()">重置</button>
+        <button (click)="search()" nz-button nzType="primary">搜索</button>
+        <button (click)="reset()" nz-button nzType="default">重置</button>
       </div>
     </div>
   </div>
 
-  <div opsCard [dynamicShadow]="true" class="card-div">
+  <div [dynamicShadow]="true" class="card-div" opsCard>
     <div class="health-panel">
       <nz-spin [nzSpinning]="(pieChartData | async).spinning">
-        <div echarts [options]="eventHealthPieChart" [merge]="(pieChartData | async).options" [autoResize]="true"
+        <div [autoResize]="true" [merge]="(pieChartData | async).options" [options]="eventHealthPieChart" echarts
              style="width: 100%; height: 300px;"></div>
       </nz-spin>
       <nz-spin [nzSpinning]="(histogramChartData | async).spinning">
-        <div echarts [options]="healthStatusHistogramChart" [merge]="(histogramChartData | async).options" [autoResize]="true"
+        <div [autoResize]="true" [merge]="(histogramChartData | async).options" [options]="healthStatusHistogramChart"
+             echarts
              style="width: 100%; height: 300px"></div>
       </nz-spin>
     </div>
   </div>
 
-  <div opsCard [dynamicShadow]="true" class="card-div">
+  <div [dynamicShadow]="true" class="card-div" opsCard>
+    <ops-panel-title [icon]="icon" [marginBottom]="15" title="健康状态"></ops-panel-title>
+    <ng-template #icon>
+      <span nz-icon nzTheme="outline" nzType="ops:healthStatus" style="color: #3561bb"></span>
+    </ng-template>
     <ng-container *ngIf="healthStatusData | async as tableData">
       <nz-table #basicTable
                 [nzData]="tableData.dataList"
+                [nzFrontPagination]="true"
                 [nzLoading]="tableData.spinning"
-                [nzTotal]="tableData.total"
-                [nzShowTotal]="totalTemplate"
                 [nzPageIndex]="pageIndex"
                 [nzPageSize]="pageSize"
-                [nzFrontPagination]="true"
+                [nzShowTotal]="totalTemplate"
+                [nzTotal]="tableData.total"
                 nzShowPagination
       >
         <thead>
         <tr>
           <th nzAlign="center" nzWidth="300px">实例 ID</th>
-          <th nzAlign="center"
+          <th [nzFilterFn]="dataFilters.statusFilter"
               [nzFilters]="instanceStatusFilter"
-              [nzFilterFn]="dataFilters.statusFilter">实例状态</th>
-          <th nzAlign="center"
+              nzAlign="center">实例状态
+          </th>
+          <th [nzFilterFn]="dataFilters.healthStatusFilter"
               [nzFilters]="instanceHealthStatusFilter"
-              [nzFilterFn]="dataFilters.healthStatusFilter">实例健康状态</th>
-          <th nzAlign="center"
+              nzAlign="center">实例健康状态
+          </th>
+          <th [nzFilterFn]="dataFilters.regionFilter"
               [nzFilters]="instanceRegionFilter"
-              [nzFilterFn]="dataFilters.regionFilter">地域</th>
+              nzAlign="center">地域
+          </th>
+          <th>
+            操作
+          </th>
         </tr>
         </thead>
         <tbody>
         <ng-container *ngFor="let data of basicTable.data">
           <tr>
             <td nzAlign="center">
-              {{ data['instanceId'] }}
+              <div>
+                <span [showIcon]="false" opsCopyText>{{ data['instanceId'] }}</span>
+              </div>
             </td>
             <td nzAlign="center">
-               <span *ngIf="data.status === 'Running'" style="color: #39A503;" nz-icon
-                     nzType="check-circle" nzTheme="outline"></span>
-              <span *ngIf="data.status !== 'Running'" style="color: #F9C757;" nz-icon
-                    nzType="exclamation-circle" nzTheme="outline"></span>
+               <span *ngIf="data.status === 'Running'" nz-icon nzTheme="outline"
+                     nzType="check-circle" style="color: #39A503;"></span>
+              <span *ngIf="data.status !== 'Running'" nz-icon nzTheme="outline"
+                    nzType="exclamation-circle" style="color: #F9C757;"></span>
               {{ GlobalConstant.INSTANCE_STATUS_MAP[data['status']] || data['status'] }}
             </td>
             <td nzAlign="center">
               <ng-container>
-               <span *ngIf="data['healthStatus'] === 'Ok'" style="color: #39A503;" nz-icon
-                           nzType="check-circle" nzTheme="outline"></span>
-                <span *ngIf="data['healthStatus'] === 'InsufficientData'" style="color: #F9C757;" nz-icon
-                      nzType="exclamation-circle" nzTheme="outline"></span>
-                <span *ngIf="data['healthStatus'] === 'Impaired'" style="color: #FF0000;" nz-icon
-                      nzType="close-circle" nzTheme="outline"></span>
-                <span *ngIf="data['healthStatus'] === 'Initializing'" style="color: #0070cc;" nz-icon
-                      nzType="info-circle" nzTheme="outline"></span>
-                <span *ngIf="data['healthStatus'] === 'NotApplicable'" style="color: #F9C757;" nz-icon
-                      nzType="question-circle" nzTheme="outline"></span>
+               <span *ngIf="data['healthStatus'] === 'Ok'" nz-icon nzTheme="outline"
+                     nzType="check-circle" style="color: #39A503;"></span>
+                <span *ngIf="data['healthStatus'] === 'InsufficientData'" nz-icon nzTheme="outline"
+                      nzType="exclamation-circle" style="color: #F9C757;"></span>
+                <span *ngIf="data['healthStatus'] === 'Impaired'" nz-icon nzTheme="outline"
+                      nzType="close-circle" style="color: #FF0000;"></span>
+                <span *ngIf="data['healthStatus'] === 'Initializing'" nz-icon nzTheme="outline"
+                      nzType="info-circle" style="color: #0070cc;"></span>
+                <span *ngIf="data['healthStatus'] === 'NotApplicable'" nz-icon nzTheme="outline"
+                      nzType="question-circle" style="color: #F9C757;"></span>
               </ng-container>
               {{ GlobalConstant.HEALTH_STATUS_MAP[data['healthStatus']] || data['healthStatus'] }}
             </td>
             <td nzAlign="center">
               {{ getRegionName(data['regionId']) }}
+            </td>
+            <td>
+              <div>
+                <span *ngIf="data.status === 'Running'">
+                  <a (click)="injectFault(data)">健康状态注入</a>
+                </span>
+                <span *ngIf="data.status !== 'Running'">
+                  <span nz-tooltip nzTooltipTitle="实例必须是运行中的状态" style="cursor: not-allowed;color: #0000003F">健康状态注入</span>
+                </span>
+              </div>
+
             </td>
           </tr>
         </ng-container>
@@ -106,4 +130,61 @@
   </div>
 </div>
 
+<nz-modal
+  (nzOnCancel)="cancelInject()"
+  [(nzVisible)]="injectVisible"
+  [nzContent]="modalContent"
+  [nzFooter]="modalFooter"
+  [nzTitle]="modalTitle"
+  [nzWidth]="650"
+>
+  <ng-template #modalTitle>
+    实例健康状态模拟
+  </ng-template>
+  <ng-template #modalContent>
+    <nz-spin [nzSpinning]="injectLoading">
+
+      <div class="inject-status-content">
+        <div nz-row>
+          <div nz-col nzSpan="3">实例ID</div>
+          <div>{{injectData.instanceId}}</div>
+        </div>
+        <div nz-row>
+          <div nz-col nzSpan="3">健康状态</div>
+          <div>
+            <nz-radio-group [(ngModel)]="healthStatusType">
+              <label [nzDisabled]="isWin" [nzTooltipTitle]="isWin ? 'windows实例暂不支持': ''" nz-radio nz-tooltip
+                     nzValue="Impaired">服务损坏</label>
+              <label nz-radio nzValue="InsufficientData">数据不足</label>
+            </nz-radio-group>
+          </div>
+        </div>
+        <div nz-row style="line-height: 22px;font-size: 12px">
+          <div nz-col nzOffset="3">
+          <span *ngIf="healthStatusType === 'Impaired'">
+            模拟健康状态 <span style="color: red">服务损坏</span>，会关闭实例云助手以及关闭指定网卡的arp功能，请确认安全后操作
+          </span>
+            <span *ngIf="healthStatusType === 'InsufficientData'">
+            模拟健康状态 <span style="color: #F9C757">数据不足</span>，会对实例进行关机操作，请确认安全后操作
+          </span>
+          </div>
+        </div>
+        <div *ngIf="healthStatusType === 'Impaired'" nz-row>
+          <div nz-col nzSpan="3">网卡名称</div>
+          <div>
+            <input [(ngModel)]="netInterfaceName" nz-input nzSize="small" placeholder="请输入需要关闭arp的实例网卡名称"
+                   style="width: 260px" type="text">
+          </div>
+        </div>
+      </div>
+
+    </nz-spin>
+  </ng-template>
+  <ng-template #modalFooter>
+    <div>
+      <button (click)="confirmInject()" nz-button nzType="primary">确定</button>
+      <button (click)="cancelInject()" nz-button nzType="default">取消</button>
+    </div>
+  </ng-template>
+</nz-modal>
 

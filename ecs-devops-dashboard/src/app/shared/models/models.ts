@@ -14,6 +14,7 @@ export interface MenuItem {
   path: string;
   queryParams: { [key: string]: any };
   isCollect: boolean;
+  isActive?: boolean;
   callBack?: () => { [key: string]: any };
 }
 
@@ -25,6 +26,8 @@ export interface MenuGroup {
   queryParams?: { [key: string]: any };
   callBack?: () => { [key: string]: any };
   iconType: string;
+  isActive?: boolean;
+  isExpand?: string;
   children: Array<MenuItem>;
 }
 

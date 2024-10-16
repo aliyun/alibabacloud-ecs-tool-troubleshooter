@@ -1,0 +1,597 @@
+<div class="instance-diagnosis-container">
+  <div class="instance-diagnosis-container-title">
+    <div *ngIf="!isUpdate" class="instance-diagnosis-container-title-create">
+      <ops-instance-diagnosis-header/>
+    </div>
+    <div *ngIf="isUpdate" class="instance-diagnosis-container-title-update">
+      <span (click)="backToTaskList()" nz-icon nzTheme="outline" nzType="arrow-left"></span>
+      <span>更新定时任务</span>
+    </div>
+  </div>
+  <div class="instance-diagnosis-container-content">
+    <nz-spin [nzSpinning]="pageLoading" [nzTip]="pageTips">
+      <div *ngIf="!isUpdate" class="instance-diagnosis-title">
+        <div class="instance-diagnosis-title-img">
+          <img alt="" src="assets/diagnose-220-122.png">
+        </div>
+        <div class="instance-diagnosis-title-content">
+          <div>实例问题排查</div>
+          <div>
+            实例问题排查可帮您检测实例的性能、费用、网络、磁盘等状态，帮助您了解实例的运行状态，及时发现并解决常见问题。实例问题排查期间可能会执行开源诊断脚本来收集一些操作系统的数据做诊断分析，但是不会对您的实例造成任何影响。
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isUpdate" class="instance-diagnosis-item" nz-row>
+        <div nz-col nzSpan="5">
+          诊断时间:
+        </div>
+        <div nz-col nzSpan="16">
+          <nz-range-picker
+            [(ngModel)]="timeRange"
+            [nzAllowClear]="false"
+            [nzDisabledDate]="disabledDate"
+            [nzDisabled]="diagnosisType !== 'single'"
+            [nzShowTime]="{ nzFormat: 'HH:mm' }"
+            nzFormat="yyyy-MM-dd HH:mm"
+            style="width: 450px"
+          ></nz-range-picker>
+          <span class="instance-diagnosis-item-time-tips">
+        <span nz-icon nzTheme="outline" nzType="info-circle" style="color: #0064c8"></span>
+          默认为您排查最近48小时内的问题
+      </span>
+        </div>
+      </div>
+
+      <div class="instance-diagnosis-item" nz-row>
+        <div class="instance-m-item-required" nz-col nzSpan="5">
+          实例:
+        </div>
+        <div class="instance-m-item-instance-select" nz-col nzSpan="16">
+          <div>
+            <nz-select (ngModelChange)="regionChange($event)"
+                       [(ngModel)]="regionId"
+                       [nzDropdownMatchSelectWidth]="false"
+                       nzPlaceHolder="请选择地域"
+                       style="width: 200px"
+            >
+              <ng-container *ngFor="let region of regionInfo">
+                <nz-option
+                  [nzLabel]="region.LocalName"
+                  [nzValue]="region.RegionId">
+                </nz-option>
+              </ng-container>
+            </nz-select>
+          </div>
+
+          <div>
+            <button (click)="openInstanceSelect()" nz-button nzType="dashed">选择实例</button>
+          </div>
+
+          <div *ngIf="selectedInstanceIds.size === 0">
+            <span style="color: red; font-size: 12px;margin-left: 10px">请选择实例</span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="selectedInstanceIds.size > 0" class="instance-diagnosis-item" nz-row>
+        <div nz-col nzOffset="5" nzSpan="16">
+          <div>
+            <nz-tag
+              (nzOnClose)="deleteInstance(instanceId)"
+              *ngFor="let instanceId of selectedInstanceIds"
+              [nzColor]="'green'"
+              [nzMode]="'closeable'"
+            >
+              {{ instanceId }}
+            </nz-tag>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!isUpdate" class="instance-diagnosis-item" nz-row>
+        <div nz-col nzSpan="5">
+          诊断类型
+        </div>
+        <div nz-col nzSpan="16">
+          <nz-radio-group (ngModelChange)="diagnosisTypeChange($event)" [(ngModel)]="diagnosisType">
+            <label *ngFor="let data of diagnosisTypeData"
+                   [nzDisabled]="data.disabled" [nzValue]="data.value"
+                   nz-radio>
+              <span nz-tooltip nzTooltipTitle="{{ data.disabled ? data.tooltip || '' : ''}}">{{data.label}}</span>
+            </label>
+          </nz-radio-group>
+          <div style="line-height: 20px">
+          <span *ngIf="diagnosisType === 'batch'" style="color: #333; font-size: 12px;">
+            批量运行ECS健康诊断依赖于阿里云<a href="https://oos.console.aliyun.com/" target="_blank">oos</a>服务
+          </span>
+
+            <span *ngIf="diagnosisType === 'regular'" style="color: #333; font-size: 12px;">
+             定时运行ECS健康诊断依赖于阿里云<a href="https://oos.console.aliyun.com/" target="_blank">oos</a>服务
+          </span>
+          </div>
+        </div>
+      </div>
+
+      <nz-divider *ngIf="diagnosisType !== 'single'"></nz-divider>
+
+      <div *ngIf="diagnosisType === 'single'" class="instance-diagnosis-item" nz-row>
+        <div nz-col nzSpan="5">
+          诊断集名称
+        </div>
+        <div nz-col nzSpan="19">
+          <input [(ngModel)]="diagnosisMetricSetId" nz-input style="width: 300px" type="text">
+          <span style="margin-left: 10px">
+            <a (click)="toDiagnosisMetricSet()">诊断集查询</a>
+          </span>
+        </div>
+      </div>
+
+      <div *ngIf="diagnosisType === 'regular'" class="instance-diagnosis-item" nz-row>
+        <div class="instance-m-item-required" nz-col nzSpan="5">
+          定时参数
+        </div>
+        <div class="instance-m-item-regular-corn" nz-col nzSpan="16">
+          <div>
+            <input (blur)="diagnosisCronBlur($event)"
+                   [(ngModel)]="diagnosisCron"
+                   [nzStatus]="diagnosisCronError"
+                   nz-input placeholder="请输入cron表达式" style="width: 300px" type="text">
+            <span style="margin-left: 10px">
+            <a
+              href="https://help.aliyun.com/zh/oos/use-cases/configure-cron-expressions?spm=5176.202021321.help.dexternal.3fc23daaeGdXae"
+              target="_blank">Cron表达式取值说明</a>
+          </span>
+          </div>
+          <div style="line-height: normal">
+            <span style="color: red">cron重复频率的时区 (GMT+08:00) Asia/Shanghai</span>
+          </div>
+          <div class="instance-m-item-regular-corn-time">
+            <div>
+              规则结束时间
+            </div>
+            <div>
+              <nz-date-picker
+                (ngModelChange)="diagnosisCronTimeChange($event)"
+                [(ngModel)]="diagnosisCronTime"
+                [nzAllowClear]="false"
+                [nzDisabledDate]="disabledCronDate"
+                [nzShowTime]="true"
+                nzFormat="yyyy-MM-dd HH:mm"
+                style="width: 300px"
+              ></nz-date-picker>
+            </div>
+          </div>
+          <div class="instance-m-item-regular-corn-show-time">
+            <div>
+              即将执行时间预览
+            </div>
+            <div class="instance-m-item-regular-corn-show-time-steps">
+              <nz-steps [nzCurrent]="previewCronDates.length + 1" nzDirection="vertical" nzSize="small">
+                <ng-container *ngFor="let date of previewCronDates">
+                  <nz-step *ngIf="date !== null" [nzTitle]="stepTitle" nzIcon="field-time">
+                  </nz-step>
+                  <ng-template #stepTitle>
+                    {{date | localDate}}
+                  </ng-template>
+                  <nz-step *ngIf="date === null" nzIcon="field-time" nzTitle="...">
+                  </nz-step>
+                </ng-container>
+
+              </nz-steps>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div *ngIf="diagnosisType === 'regular'" class="instance-diagnosis-item" nz-row>
+        <div class="instance-m-item-required" nz-col nzSpan="5">
+          执行的RAM角色
+        </div>
+        <div nz-col nzSpan="19">
+          <div>
+            <input (blur)="diagnosisRoleBlur($event)" (ngModelChange)="diagnosisRoleChange($event)"
+                   [(ngModel)]="diagnosisRole" nz-input
+                   placeholder="请输入RAM诊断角色" style="width: 300px" type="text">
+            <span *ngIf="diagnosisRoleLoading" nz-icon nzTheme="outline" nzType="loading"
+                  style="margin-left: 10px;color: #1890ff;"></span>
+            <span style="margin-left: 10px">
+            <a (click)="permissionVisible = !permissionVisible">查看执行当前定时诊断需要的权限</a>
+          </span>
+          </div>
+          <div>
+            <span>OOS扮演的RAM角色。</span>
+            <a
+              href="https://help.aliyun.com/zh/oos/use-cases/grant-ram-permissions-on-oos?spm=5176.202021321.help.dexternal.3fc23daaeGdXae"
+              target="_blank">查看如何为OOS服务设置RAM权限</a>
+          </div>
+          <div *ngIf="diagnosisRoleMsg.message !== ''"
+               style="display: flex;background-color: #fff9d9;padding: 8px 8px 8px 8px;line-height: normal">
+            <div style="padding: 0">
+              <span nz-icon nzTheme="outline" nzType="exclamation-circle" style="color: #f90;margin-right: 4px;"></span>
+            </div>
+            <div>
+              <div style="font-size: 12px;padding: 0;font-weight: 500">
+              <span>您当前指定的角色 {{diagnosisRole}}
+                缺少以下权限来创建执行，复制需要的
+                <a (click)="permissionVisible = !permissionVisible">所有权限</a>，前往
+                <a [href]="'https://ram.console.aliyun.com/roles/' + diagnosisRole" target="_blank">RAM控制台</a>
+                手动授权策略或联系主账号添加权限策略，如未拥有完整权限可能会造成任务执行失败</span>
+              </div>
+              <div style="margin-top: 10px">
+                <div style="word-break: break-all; width: 100%;">
+                  {{diagnosisRoleMsg.message}}
+                  {{diagnosisRoleMsg.description}}
+                </div>
+                <div *ngIf="diagnosisRoleMsg.permission.length > 0">
+                  <ng-container *ngFor="let permission of diagnosisRoleMsg.permission">
+                    <span>{{permission}}</span>
+                  </ng-container>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="diagnosisType !== 'single'" class="instance-diagnosis-item" nz-row>
+        <div nz-col nzSpan="5">
+          任务执行的并发比率(选填)
+        </div>
+        <div nz-col nzSpan="19">
+          <div>
+            速率控制类型
+          </div>
+          <div>
+            <nz-radio-group (ngModelChange)="diagnosisRateControlTypeChange($event)"
+                            [(ngModel)]="diagnosisRateControl.type">
+              <label *ngFor="let data of diagnosisRateControlData"
+                     [nzValue]="data.value"
+                     nz-radio>
+                <span>{{data.label}}</span>
+              </label>
+            </nz-radio-group>
+          </div>
+
+          <div *ngIf="diagnosisRateControl.type === 'Concurrency'">
+            <div>
+              并发速率
+            </div>
+            <div>
+              <nz-radio-group
+                [(ngModel)]="diagnosisRateControl.Concurrency.type">
+                <label nz-radio nzValue="value">数量:</label>
+                <nz-input-number [(ngModel)]="diagnosisRateControl.Concurrency.value"
+                                 [nzMin]="0"
+                                 [nzStep]="1">
+                </nz-input-number>
+                <span style="padding-right: 10px"></span>
+                <label nz-radio nzValue="percent">
+                  百分比:
+                </label>
+                <span>
+                <nz-input-number
+                  [(ngModel)]="diagnosisRateControl.Concurrency.percent"
+                  [nzFormatter]="formatterPercent"
+                  [nzMax]="100"
+                  [nzMin]="1"
+                  [nzParser]="parserPercent"
+                  [nzStep]="1"
+                ></nz-input-number>
+              </span>
+              </nz-radio-group>
+            </div>
+            <div style="line-height: 22px;color: rgb(128,128,128);">
+              指定一个数值或者百分比来控制并发速率
+            </div>
+          </div>
+
+          <div *ngIf="diagnosisRateControl.type === 'Batch'">
+            <div>
+              批次速率数组
+            </div>
+            <div>
+              <div>
+                <input (ngModelChange)="batchInputChange($event)" [(ngModel)]="diagnosisRateControl.Batch.value"
+                       nz-input
+                       placeholder="请输入批次速率组，如[1,5%,10%]" style="width: 300px" type="text">
+              </div>
+              <div
+                style="background-color: #e8f4ff;font-size: 11px;line-height: normal;padding: 8px 12px 8px 16px; margin-top: 5px">
+                <span nz-icon nzTheme="outline" nzType="info-circle" style="color: #0064c8"></span>
+                <span>
+                把一个执行明确地分成多个批次，然后一个批次运行完，再运行下一个批次，上一个批次不全部完成的情况下，下一个批次不会开始，批次值可以是数值或者百分比，如[1, 5%, 10%] 表示第一个批次是1，第二个批次是总量的5%，第三个以后批次为10%
+              </span>
+              </div>
+              <div *ngIf="diagnosisRateControl.Batch.error"
+                   style="font-size: 11px;line-height: normal; margin-top: 5px">
+              <span style="color: red">
+                批次必须是一个有效的数组，例如：[1, 5%, 10%]
+              </span>
+              </div>
+            </div>
+            <div>
+              循环并发控制
+            </div>
+            <div>
+              <nz-radio-group [(ngModel)]="diagnosisRateControl.Batch.controlModel">
+                <label nz-radio nzValue="Automatic">不暂停</label>
+                <label nz-radio nzValue="EveryBatchPause">每批暂停</label>
+                <label nz-radio nzValue="FirstBatchPause">第一批暂停</label>
+              </nz-radio-group>
+            </div>
+          </div>
+
+          <div>
+            <div>
+              最大错误次数
+            </div>
+            <div>
+              <div>
+                <nz-radio-group
+                  [(ngModel)]="diagnosisErrorControl.type">
+                  <label nz-radio nzValue="value">错误数量:</label>
+                  <nz-input-number [(ngModel)]="diagnosisErrorControl.value"
+                                   [nzMin]="0"
+                                   [nzStep]="1">
+                  </nz-input-number>
+                  <span style="padding-right: 10px"></span>
+                  <label nz-radio nzValue="percent">
+                    百分比:
+                  </label>
+                  <span>
+                    <nz-input-number
+                      [(ngModel)]="diagnosisErrorControl.percent"
+                      [nzFormatter]="formatterPercent"
+                      [nzMax]="100"
+                      [nzMin]="1"
+                      [nzParser]="parserPercent"
+                      [nzStep]="1"
+                    ></nz-input-number>
+                  </span>
+                </nz-radio-group>
+              </div>
+              <div
+                style="background-color: #e8f4ff;font-size: 11px;line-height: normal;padding: 8px 12px 8px 16px; margin-top: 5px">
+                <span nz-icon nzTheme="outline" nzType="info-circle" style="color: #0064c8"></span>
+                <span>
+                  指定任务在停止前的最大错误次数，可以是数值或者百分比，默认值是0，表示有1个错误时整个任务就会失败结束。若设置为100%则表示无论遇到多少错误整个执行都会成功。
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="diagnosisType === 'regular'" class="instance-diagnosis-item" nz-row>
+        <div nz-col nzSpan="5">
+          设置类钉钉的参数(选填)
+        </div>
+        <div nz-col nzSpan="19">
+          <div>
+            <div>
+              是否通知异常结果
+            </div>
+            <div>
+              <nz-switch
+                (ngModelChange)="diagnosisNotifyControl.whetherNotify = !diagnosisNotifyControl.whetherNotify"
+                [ngModel]="diagnosisNotifyControl.whetherNotify"
+                [nzCheckedChildren]="checkedTemplate"
+                [nzUnCheckedChildren]="unCheckedTemplate"
+              ></nz-switch>
+              <ng-template #checkedTemplate><span nz-icon nzType="check"></span></ng-template>
+              <ng-template #unCheckedTemplate><span nz-icon nzType="close"></span></ng-template>
+            </div>
+          </div>
+          <div *ngIf="diagnosisNotifyControl.whetherNotify">
+            <div>
+              <div>通知地址</div>
+              <div>
+                <textarea
+                  nz-input
+                  style="width: 500px"
+                  [(ngModel)]="diagnosisNotifyControl.notifyURI"
+                  placeholder="输入通知WebHook地址"
+                  [nzAutosize]="{ minRows: 2, maxRows: 4 }"
+                ></textarea>
+              </div>
+            </div>
+
+            <div>
+              <div>通知@</div>
+              <div>
+                <textarea
+                  nz-input
+                  style="width: 500px"
+                  [(ngModel)]="diagnosisNotifyControl.notifyAt"
+                  placeholder="输入需要通知@的用户"
+                  [nzAutosize]="{ minRows: 2, maxRows: 6 }"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div [style.height.px]="diagnosisType === 'single'? '40' : '0'"></div>
+      <nz-divider></nz-divider>
+
+      <div *ngIf="!isUpdate" class="instance-diagnosis-btn">
+        <button (click)="startDiagnosis()" [disabled]="btnDisabled()"
+                nz-button nzType="primary">
+          {{diagnosisType === 'single' ? '开始诊断' : diagnosisType === 'batch' ? '批量诊断' : '定时诊断' }}
+        </button>
+        <button (click)="historyDiagnosisList()" nz-button nzType="default">查看历史</button>
+        <button (click)="historyDiagnosisTaskList()" nz-button nzType="default">批量查询</button>
+        <span style="font-size: 12px;position: absolute;margin-top: 12px">
+        批量诊断和定时诊断任务结果通过 <span style="color: red">批量查询按钮</span> 查询
+      </span>
+      </div>
+      <div *ngIf="isUpdate" class="instance-diagnosis-btn">
+        <button (click)="updateDiagnosisTask()" [disabled]="btnDisabled()"
+                nz-button nzType="primary">
+          更新定时诊断
+        </button>
+      </div>
+    </nz-spin>
+  </div>
+</div>
+<nz-modal
+  (nzOnCancel)="cancelInstanceSelect()"
+  [(nzVisible)]="instanceVisible"
+  [nzContent]="modalContent"
+  [nzFooter]="modalFooter"
+  [nzTitle]="modalTitle"
+  [nzWidth]="900"
+>
+  <ng-template #modalTitle>选择实例</ng-template>
+
+  <ng-template #modalContent>
+    <div>
+      <div class="instance-modal-search">
+        <div>
+          <input (ngModelChange)="searchChange($event)" [(ngModel)]="searchInstanceInput" nz-input
+                 placeholder="请输入实例ID或者实例名称搜索"/>
+        </div>
+        <div class="instance-modal-search-tips">
+          已选择 {{modalSelectedInstanceIds.size}} 台服务器
+        </div>
+      </div>
+      <nz-table
+        #instanceTable
+        (nzCurrentPageDataChange)="onCurrentPageDataChange($event)"
+        [nzData]="instanceData"
+        [nzFrontPagination]="true"
+        [nzLoading]="instanceDataLoading"
+        [nzPageSize]="10"
+        [nzScroll]="{ y: '260px' }"
+        [nzShowTotal]="totalTemplate"
+        [nzTotal]="instanceData.length || 0"
+        nzSize="small"
+      >
+        <thead>
+        <tr>
+          <th
+            (nzCheckedChange)="onAllChecked($event)"
+            [nzChecked]="checked"
+            [nzIndeterminate]="indeterminate"
+            nzWidth="40px"
+          ></th>
+          <th nzWidth="200px">实例ID/名称</th>
+          <th nzWidth="100px">运行状态</th>
+          <th nzWidth="120px">云助手安装状态</th>
+          <th nzWidth="50px">系统</th>
+          <th nzWidth="160px">配置</th>
+          <th nzWidth="180px">付费方式/创建时间</th>
+        </tr>
+        </thead>
+        <tbody>
+        <ng-container *ngFor="let data of instanceTable.data">
+          <tr>
+            <td
+              (nzCheckedChange)="onItemChecked(data.InstanceId, $event)"
+              [nzChecked]="modalSelectedInstanceIds.has(data.InstanceId)"
+              [nzDisabled]="canSelected(data)"
+            ></td>
+            <td>
+              <div>{{data.InstanceId}}</div>
+              <div style="font-size: 10px;color: #333">{{data.InstanceName}}</div>
+            </td>
+            <td>
+              <span *ngIf="data.Status === 'Running'" nz-icon nzTheme="outline"
+                    nzType="check-circle" style="color: #39A503;"></span>
+              <span *ngIf="data.Status !== 'Running'" nz-icon nzTheme="outline"
+                    nzType="exclamation-circle" style="color: #F9C757;"></span>
+              {{data.Status | instanceStatusDesc}}
+            </td>
+            <td>
+              <nz-spin [nzSpinning]="instanceCloudAssistantLoading">
+                <ng-container *ngrxLet="getCloudAssistantStatus(data.InstanceId) as cloudAssistant">
+                <span *ngIf="cloudAssistant.status === 'success'" nz-icon nzTheme="outline"
+                      nzType="check-circle" style="color: #39A503;"></span>
+                  <span *ngIf="cloudAssistant.status !== 'success'" nz-icon nzTheme="outline"
+                        nzType="close-circle" style="color: #ff0000;"></span>
+                  {{cloudAssistant.desc}}
+                </ng-container>
+              </nz-spin>
+            </td>
+            <td>
+              <span *ngIf="data.OSType === 'windows'" [nzPopoverContent]="osTypePopoverContent" nz-icon nz-popover
+                    nzTheme="outline"
+                    nzType="ops:window" style="font-size: 20px;">
+              </span>
+              <span *ngIf="data.OSType === 'linux'" [nzPopoverContent]="osTypePopoverContent" nz-icon nz-popover
+                    nzTheme="outline"
+                    nzType="ops:linux" style="font-size: 20px;">
+              </span>
+              <ng-template #osTypePopoverContent>
+                <div><strong>{{data.OSName}}</strong></div>
+                <div>{{data.ImageId}}</div>
+              </ng-template>
+            </td>
+            <td>
+              <div>
+                <div>
+                  <span style="padding-right: 5px">
+                    <strong>{{data.Cpu}}</strong> 核(vCPU)
+                  </span>
+                  <span style="padding-right: 5px">
+                    <strong>{{data.Memory > 1024 ? data.Memory / 1024 : data.Memory}}</strong>
+                    {{data.Memory > 1024 ? 'GiB' : 'MiB'}}
+                  </span>
+                </div>
+                <div style="font-size: 14px">
+                  {{data.InstanceType}}
+                </div>
+              </div>
+            </td>
+            <td>
+              <div>
+                <div>{{getInstanceChargeTypeDesc(data.InstanceChargeType)}}</div>
+                <div style="color: #808080">{{getLocalTime(data.CreationTime)}}</div>
+              </div>
+            </td>
+          </tr>
+        </ng-container>
+        </tbody>
+        <ng-template #totalTemplate> 共 {{ instanceData.length}} 条</ng-template>
+      </nz-table>
+    </div>
+  </ng-template>
+
+  <ng-template #modalFooter>
+    <button (click)="ackSelectInstance()" [disabled]="modalSelectedInstanceIds.size === 0" nz-button nzType="primary">
+      确认
+    </button>
+    <button (click)="cancelInstanceSelect()" nz-button nzType="default">
+      取消
+    </button>
+  </ng-template>
+
+</nz-modal>
+
+<nz-modal
+  (nzOnCancel)="permissionVisible = !permissionVisible"
+  [(nzVisible)]="permissionVisible"
+  [nzContent]="permissionContent"
+  [nzFooter]="permissionFooter"
+  [nzTitle]="permissionTitle"
+  [nzWidth]="500"
+>
+
+  <ng-template #permissionTitle>执行定时诊断需要角色至少有下列授权策略</ng-template>
+
+  <ng-template #permissionContent>
+    <div>
+      <span opsCopyText>
+        {{permissionData | json}}
+      </span>
+    </div>
+  </ng-template>
+  <ng-template #permissionFooter>
+    <button (click)="permissionVisible = !permissionVisible" nz-button nzType="default">
+      关闭
+    </button>
+  </ng-template>
+</nz-modal>

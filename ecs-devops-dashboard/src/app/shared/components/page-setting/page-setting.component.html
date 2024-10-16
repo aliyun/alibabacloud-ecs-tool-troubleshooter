@@ -1,0 +1,76 @@
+<div class="setting-container">
+  <div>
+    <nz-tabset
+      [(nzSelectedIndex)]="selectedIndex"
+      nzTabPosition="left"
+      style="height: 300px"
+    >
+      <nz-tab nzTitle="AccessKey设置">
+        <div class="setting-ak-tips">
+          <div style="padding: 0">
+            <span nz-icon nzTheme="outline" nzType="exclamation-circle" style="color: #f90;margin-right: 4px;"></span>
+          </div>
+          <div>
+            <span>请确保您有该AccessKey的权限。AccessKey存储于浏览器本地(LocalStorage)仅用于访问OpenApi，不会上传到云端。</span>
+            <a href="https://ram.console.aliyun.com/manage/ak" target="_blank">获取AccessKey</a>
+          </div>
+        </div>
+        <div class="setting-input">
+          <span class="setting-input-label">AccessKey ID：</span>
+          <span class="setting-input-content">
+          <input [(ngModel)]="ak" nz-input placeholder="请输入AccessKey ID" type="text">
+        </span>
+        </div>
+        <div class="setting-input">
+          <span class="setting-input-label">AccessKey Secret：</span>
+          <span class="setting-input-content">
+          <input [(ngModel)]="sk" nz-input placeholder="请输入AccessKey Secret" type="password">
+        </span>
+        </div>
+      </nz-tab>
+      <nz-tab nzTitle="地域设置">
+        <div class="setting-ak-tips" style="background-color: #e8f4ff; margin-bottom: 6px">
+          <div style="padding: 0">
+            <span nz-icon nzTheme="outline" nzType="exclamation-circle"
+                  style="color: #1890ff;margin-right: 4px;"></span>
+          </div>
+          <div>
+          <span>
+            选择地域后，仅访问该地域内的OpenApi接口，可以提高访问速度，默认选择全地域
+          </span>
+          </div>
+        </div>
+        <div class="setting-region">
+          <ng-container *ngFor="let data of sourceRegionInfo; index as i">
+            <div [style.margin-top]="i === 0 ? '0' : '10px'">
+              <div>
+                <label
+                  (ngModelChange)="updateAllChecked(data, $event)"
+                  [(ngModel)]="data.checked"
+                  [nzIndeterminate]="data.indeterminate"
+                  nz-checkbox
+                >
+                <span style="line-height: 30px;font-size: 14px;font-weight: 600">
+                  {{data.label}}
+                </span>
+                </label>
+              </div>
+
+              <div style="padding-left: 24px">
+                <nz-checkbox-group (ngModelChange)="updateSingleChecked(data)"
+                                   [(ngModel)]="data.children"></nz-checkbox-group>
+              </div>
+
+            </div>
+          </ng-container>
+
+        </div>
+      </nz-tab>
+    </nz-tabset>
+  </div>
+  <div class="setting-footer">
+    <button (click)="cancel()" nz-button nzType="default">取消</button>
+    <span style="padding-left: 10px"></span>
+    <button (click)="save()" nz-button nzType="primary">保存</button>
+  </div>
+</div>

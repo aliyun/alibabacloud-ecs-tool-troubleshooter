@@ -1,0 +1,397 @@
+<div class="instance-task-detail-container">
+  <div class="instance-task-detail-container-header">
+    <div class="instance-task-detail-container-title">
+      <span (click)="back()" nz-icon nzTheme="outline" nzType="arrow-left"></span>
+      <span>{{executionId}}</span>
+      <span *ngIf="!pageLoading" class="instance-task-detail-container-title-status">
+        <ng-container *ngTemplateOutlet="statusTemp; context: {status: taskInfo.Status}"></ng-container>
+        <span style="margin-left: 5px">{{taskInfo.Status | taskStatus}}</span>
+      </span>
+    </div>
+
+    <div *ngIf="!pageLoading" class="instance-task-detail-container-header-btn">
+      <button (click)="operationTask('trigger', taskInfo)" *ngIf="canTrigger(taskInfo)" nz-button nzType="default">
+        立即触发
+      </button>
+      <button (click)="operationTask('update', taskInfo)" *ngIf="canUpdate(taskInfo)" nz-button nzType="default">
+        修改执行
+      </button>
+      <button (click)="operationTask('cancel', taskInfo)" *ngIf="canCancel(taskInfo)" nz-button nzType="default">
+        取消执行
+      </button>
+      <button (click)="operationTask('delete', taskInfo)" *ngIf="canDelete(taskInfo)" nz-button nzType="default">
+        删除执行
+      </button>
+      <button (click)="refresh()" nz-button nzType="default">
+        <span nz-icon nzTheme="outline" nzType="reload"></span>
+      </button>
+    </div>
+  </div>
+  <div class="instance-task-detail-container-content">
+
+    <nz-skeleton [nzLoading]="pageLoading">
+      <div class="instance-task-detail-container-content-item">
+        <div class="instance-task-detail-container-content-item-title">
+          基本信息
+        </div>
+        <div class="instance-task-detail-container-content-item-info">
+          <div>
+            <div>执行ID：</div>
+            <div>{{executionId}}</div>
+          </div>
+          <!--          <div>-->
+          <!--            <div>执行模式</div>-->
+          <!--            <div>{{taskInfo.Mode | taskInvokeMode}}</div>-->
+          <!--          </div>-->
+          <div>
+            <div>地域</div>
+            <div>{{getRegionLocalName(regionId)}}</div>
+          </div>
+          <div *ngIf="taskInfo.ParentExecutionId">
+            <div>父执行ID</div>
+            <div>{{taskInfo.ParentExecutionId}}</div>
+          </div>
+          <div>
+            <div>任务类型</div>
+            <div>
+              {{taskInfo.TemplateName | diagnosticMode}}
+            </div>
+          </div>
+          <div>
+            <div>执行类型</div>
+            <div>{{taskInfo.Category | taskInvokeCategory}}</div>
+          </div>
+          <div>
+            <div>执行状态</div>
+            <div>
+              <ng-container *ngTemplateOutlet="statusTemp; context: {status: taskInfo.Status}"></ng-container>
+              <span [nzTooltipTitle]="taskInfo.StatusMessage"
+                    [style.border-bottom]="taskInfo.Status === 'Failed' ? '1px dotted #333': ''" nz-tooltip>
+                {{taskInfo.Status | taskStatus}}
+              </span>
+            </div>
+          </div>
+          <div>
+            <div>执行人</div>
+            <div>{{taskInfo.ExecutedBy}}</div>
+          </div>
+          <div>
+            <div>开始时间</div>
+            <div>{{taskInfo.StartDate | localDate}}</div>
+          </div>
+          <div>
+            <div>结束时间</div>
+            <div>{{taskInfo.EndDate | localDate}}</div>
+          </div>
+
+        </div>
+      </div>
+
+      <nz-divider></nz-divider>
+
+      <div class="instance-task-detail-container-content-item">
+        <div class="instance-task-detail-container-content-item-title">
+          任务信息
+        </div>
+        <div class="instance-task-detail-container-content-item-info">
+          <div *ngIf="taskInfo?.Parameters?.timerTrigger">
+            <ng-container *ngrxLet="taskInfo?.Parameters?.timerTrigger as timerTrigger">
+              <div>定时类型</div>
+              <div>
+                <div>
+                  <span>重复频率：</span>
+                  <span opsCopyText>{{timerTrigger.expression}}</span>
+                </div>
+                <div>
+                  <span>重复频率的时区：</span>
+                  <span>{{timerTrigger.timeZone}}</span>
+                </div>
+                <div>
+                  <span>结束时间：</span>
+                  <span>{{timerTrigger.endDate | localDate}}</span>
+                </div>
+              </div>
+            </ng-container>
+          </div>
+          <div *ngIf="taskInfo?.Parameters?.regionId">
+            <div>地域ID</div>
+            <div>{{getRegionLocalName(taskInfo?.Parameters?.regionId)}}</div>
+          </div>
+          <ng-container *ngIf="taskInfo?.Parameters?.targets?.ResourceIds">
+            <div *ngrxLet="(taskInfo?.Parameters?.targets?.ResourceIds || []) as resourceIds">
+              <div>实例ID({{resourceIds.length}})</div>
+              <div nz-tooltip nzTooltipTitle="{{resourceIds.join(',')}}">
+                <span opsCopyText
+                      style="display: inline-flex;max-width: 350px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                  {{resourceIds.join(",")}}
+                </span>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="taskInfo?.Parameters?.rateControl">
+            <div *ngrxLet="(taskInfo?.Parameters?.rateControl || {}) as rateControl">
+              <div>任务执行的并发比率</div>
+              <div>
+                <div>
+                  <span>速率控制类型：</span>
+                  <span>
+                  {{rateControl.Mode | taskBatchControlType}}
+                </span>
+                </div>
+                <div *ngIf="rateControl.Concurrency">
+                  <span>并发速率：</span>
+                  <span>{{rateControl.Concurrency}}</span>
+                </div>
+                <div *ngIf="rateControl.Batch">
+                  <span>批次速率数组：</span>
+                  <span>{{rateControl.Batch}}</span>
+                </div>
+                <div *ngIf="rateControl.BatchPauseOption">
+                  <span>循环并发控制：</span>
+                  <span>{{rateControl.BatchPauseOption | taskBatchConcurrencyControlType}}</span>
+                </div>
+                <div>
+                  <span>最大错误次数：</span>
+                  <span>{{rateControl.MaxErrors}}</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+
+          <div *ngIf="taskInfo.RamRole && taskInfo?.Parameters?.timerTrigger">
+            <div>OOS扮演的角色</div>
+            <div>
+              <a [href]="'https://ram.console.aliyun.com/roles/' + taskInfo.RamRole"
+                 target="_blank">{{taskInfo.RamRole}}</a>
+            </div>
+          </div>
+
+          <div *ngIf="taskInfo.Category === 'TimerTrigger'">
+            <div>是否通知异常结果</div>
+            <div>
+              {{taskInfo?.Parameters?.whetherNotify ? '是' : '否'}}
+            </div>
+          </div>
+
+          <div *ngIf="taskInfo?.Parameters?.whetherNotify">
+            <div>通知地址</div>
+            <div nz-tooltip nzTooltipTitle="{{taskInfo?.Parameters?.notifyURI}}">
+                <span opsCopyText
+                      style="display: inline-flex;max-width: 350px;white-space: nowrap;overflow: hidden;text-overflow: ellipsis;">
+                  {{taskInfo?.Parameters?.notifyURI}}
+                </span>
+            </div>
+          </div>
+
+          <div *ngIf="taskInfo?.Parameters?.whetherNotify">
+            <div>通知@</div>
+            <div>
+              {{taskInfo?.Parameters?.notifyAt || '-'}}
+            </div>
+          </div>
+
+          <ng-container *ngIf="taskInfo?.Parameters?.resourceId">
+            <div>
+              <div>资源ID</div>
+              <div>
+                <span style="line-height: 22px" [showIcon]="false" opsCopyText>{{taskInfo?.Parameters?.resourceId}}</span>
+              </div>
+            </div>
+          </ng-container>
+          <ng-container *ngIf="taskInfo?.Parameters?.metricSetId">
+            <div>
+              <div>诊断指标集合ID</div>
+              <div>
+                <span [showIcon]="false" opsCopyText>{{taskInfo?.Parameters?.metricSetId}}</span>
+              </div>
+            </div>
+          </ng-container>
+
+        </div>
+      </div>
+
+      <nz-divider></nz-divider>
+
+      <div>
+        <!-- timer sub task list -->
+        <div *ngIf="taskInfo.Category === 'TimerTrigger' && taskInfo.ParentExecutionId === undefined">
+          <nz-tabset (nzSelectChange)="subTaskPanelChange($event)">
+            <nz-tab nzTitle="历史执行">
+              <ng-container *ngTemplateOutlet="historyTaskTemp"></ng-container>
+            </nz-tab>
+            <nz-tab nzTitle="即将执行">
+              <ng-container *ngTemplateOutlet="previewCronTemp"></ng-container>
+            </nz-tab>
+          </nz-tabset>
+        </div>
+        <!-- normal task list -->
+        <div
+          *ngIf="(taskInfo.ParentExecutionId !== undefined || taskInfo.Category !== 'TimerTrigger')
+          && !(executionId.indexOf('.') > -1)">
+          <nz-tabset>
+            <nz-tab nzTitle="子任务执行列表">
+              <ng-container *ngTemplateOutlet="subTaskTemp"></ng-container>
+            </nz-tab>
+          </nz-tabset>
+        </div>
+        <!-- task detail ->report -->
+        <div *ngIf="taskReportInfo && taskReportInfo.ReportId">
+          <div style="font-weight: 500;font-size: 16px;margin-bottom: 10px;">
+            诊断结果
+          </div>
+          <ops-instance-diagnosis-report-detail [value]="taskReportInfo"></ops-instance-diagnosis-report-detail>
+        </div>
+      </div>
+    </nz-skeleton>
+
+  </div>
+</div>
+
+<ng-template #previewCronTemp>
+  <ng-container *ngIf="previewCronDates.length > 0;else emptyPreviewCronTmp">
+    <nz-steps [nzCurrent]="previewCronDates.length + 1" nzDirection="vertical" nzSize="small">
+      <ng-container *ngFor="let date of previewCronDates">
+        <nz-step *ngIf="date !== null" [nzTitle]="stepTitle" nzIcon="field-time">
+        </nz-step>
+        <ng-template #stepTitle>
+        <span nz-tooltip nzTooltipPlacement="right" nzTooltipTitle="即将执行时间的预览，仅展示即将执行的5次时间">
+          {{date | localDate}}
+        </span>
+        </ng-template>
+        <nz-step *ngIf="date === null" nzIcon="field-time" nzTitle="...">
+        </nz-step>
+      </ng-container>
+
+    </nz-steps>
+  </ng-container>
+  <ng-template #emptyPreviewCronTmp>
+    <div style="margin: 0 auto;text-align: center;height: 50px;line-height: 50px;font-size: 14px;">
+      无接下来执行的时间点
+    </div>
+  </ng-template>
+</ng-template>
+
+<ng-template #historyTaskTemp>
+  <nz-table #borderedTable
+            [nzData]="allTaskData"
+            [nzFrontPagination]="true"
+            [nzLoading]="historyTaskLoading"
+            [nzPageSize]="10"
+            [nzShowPagination]="true"
+            [nzTotal]="allTaskData.length"
+            nzBordered
+            nzSize="small">
+    <thead>
+    <tr>
+      <th>执行ID</th>
+      <th>执行状态</th>
+      <th>执行开始时间</th>
+      <th>执行结束时间</th>
+      <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let data of borderedTable.data">
+      <td>
+        <a (click)="toResult(data)">{{ data.ExecutionId }}</a>
+      </td>
+      <td>
+        <ng-container *ngTemplateOutlet="statusTemp; context: {status: data.Status}"></ng-container>
+        {{ data.Status | taskStatus}}
+      </td>
+      <td>{{ data.StartDate | localDate }}</td>
+      <td>{{ data.EndDate | localDate}}</td>
+      <td>
+        <a (click)="toResult(data)">执行结果</a>
+      </td>
+    </tr>
+    </tbody>
+  </nz-table>
+</ng-template>
+
+
+<ng-template #subTaskTemp>
+
+  <ng-template #headerTemp>
+    <div class="instance-diagnosis-sub-task-header">
+      <ng-container *ngFor="let item of subTaskCounterOperation; let i = index">
+        <div (click)="selectSubTaskHeaderOperation(i)"
+             [class]="{'instance-diagnosis-sub-task-header-active': i === subActiveIndex}">
+          <div>{{item.label}}</div>
+          <div>
+            <span [style.color]="item.color">
+              {{ getCounter(item.key)}}
+            </span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </ng-template>
+  <nz-table #subTable
+            [nzData]="subTaskData"
+            [nzFrontPagination]="true"
+            [nzLoading]="subTaskLoading"
+            [nzPageSize]="10"
+            [nzShowPagination]="true"
+            [nzTitle]="headerTemp"
+            [nzTotal]="subTaskData.length"
+            nzBordered
+            nzSize="small">
+    <thead>
+    <tr>
+      <th>执行ID</th>
+      <th nzWidth="260px">资源ID</th>
+      <th>执行开始时间</th>
+      <th>执行结束时间</th>
+      <th>执行状态</th>
+      <th>操作</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr *ngFor="let data of subTable.data">
+      <td>
+        <span *ngIf="data.ChildExecutionId">
+          <a (click)="toDetail(data)">{{ data.ChildExecutionId }}</a>
+        </span>
+        <span *ngIf="!data.ChildExecutionId">
+          -
+        </span>
+      </td>
+      <td>
+        <div style="line-height: 24px">
+          <span [showIcon]="false" opsCopyText>{{ data.LoopItem}}</span>
+        </div>
+      </td>
+      <td>{{ data.StartDate | localDate}}</td>
+      <td>{{ data.EndDate | localDate}}</td>
+      <td>
+        <ng-container *ngTemplateOutlet="statusTemp; context: {status: data.Status}"></ng-container>
+        {{ data.Status | taskStatus}}
+      </td>
+      <td>
+        <span *ngIf="data.ChildExecutionId">
+          <a (click)="toDetail(data)">详情</a>
+        </span>
+        <span *ngIf="!data.ChildExecutionId">
+          -
+        </span>
+
+      </td>
+    </tr>
+    </tbody>
+  </nz-table>
+</ng-template>
+
+<ng-template #statusTemp let-status="status">
+  <span *ngIf="status === 'Running'" nz-icon nzTheme="outline" nzType="loading" style="color: #0064c8"></span>
+  <span *ngIf="status === 'Success'" nz-icon nzTheme="fill" nzType="check-circle" style="color: #090"></span>
+  <span *ngIf="status === 'Failed'" nz-icon nzTheme="outline" nzType="close-circle" style="color: red"></span>
+  <span *ngIf="status === 'Waiting'" nz-icon nzTheme="outline" nzType="clock-circle" style="color: #090"></span>
+  <span *ngIf="status === 'Cancelled'" nz-icon nzTheme="fill" nzType="minus-circle" style="color: #fdb814"></span>
+  <span *ngIf="status === 'Pending'" nz-icon nzTheme="fill" nzType="clock-circle" style="color: #333"></span>
+  <span *ngIf="status === 'Queued'" nz-icon nzTheme="outline" nzType="loading" style="color: #0064c8"></span>
+
+
+  <!--  <span *ngIf="status === 'Started'" nz-icon nzTheme="outline" nzType="check-circle" style="color: #5aef15"></span>-->
+  <!--  <span *ngIf="status === 'Skipped'" nz-icon nzTheme="outline" nzType="close-circle" style="color: #5aef15"></span>-->
+</ng-template>

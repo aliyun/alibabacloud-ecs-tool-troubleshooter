@@ -1,5 +1,5 @@
 import {NgModule} from '@angular/core';
-import {CommonModule} from '@angular/common';
+import {CommonModule, NgOptimizedImage} from '@angular/common';
 
 import {HomeRoutingModule} from './home-routing.module';
 import {DisplayHomeComponent} from './display-home/display-home.component';
@@ -25,10 +25,30 @@ import {EmptyEchartsDirective} from 'src/app/shared/directive/empty-echarts.dire
 import {NzToolTipModule} from "ng-zorro-antd/tooltip";
 import {HealthStatusDescPipe} from "../../shared/pipe/health-status-desc.pipe";
 import {InstanceStatusDescPipe} from "../../shared/pipe/instance-status-desc.pipe";
+import {InstanceMaintenanceAttrComponent} from './instance-maintenance-attr/instance-maintenance-attr.component';
+import {NzDescriptionsModule} from "ng-zorro-antd/descriptions";
+import {NzFormModule} from "ng-zorro-antd/form";
+import {NzInputModule} from "ng-zorro-antd/input";
+import {NzRadioModule} from "ng-zorro-antd/radio";
+import {NzTagModule} from "ng-zorro-antd/tag";
+import {InstanceMaintenanceAttrPipe} from "../../shared/pipe/instance-maintenance-attr.pipe";
+import {NzDropDownModule} from "ng-zorro-antd/dropdown";
+import {InstanceScreenSnapshotComponent} from './instance-screen-snapshot/instance-screen-snapshot.component';
+import {InstanceConsoleOutputComponent} from './instance-console-output/instance-console-output.component';
+import {ResourceDistributionComponent} from './resource-distribution/resource-distribution.component';
+import {MapItemPositionDirective} from "../../shared/directive/map-item-position.directive";
+import {LetDirective} from "@ngrx/component";
+import {InstanceMonitorComponent} from './instance-monitor/instance-monitor.component';
+import {NzModalModule} from "ng-zorro-antd/modal";
 
 @NgModule({
   declarations: [
     DisplayHomeComponent,
+    InstanceMaintenanceAttrComponent,
+    InstanceScreenSnapshotComponent,
+    InstanceConsoleOutputComponent,
+    ResourceDistributionComponent,
+    InstanceMonitorComponent,
   ],
   imports: [
     CommonModule,
@@ -40,6 +60,7 @@ import {InstanceStatusDescPipe} from "../../shared/pipe/instance-status-desc.pip
     EffectsModule.forFeature([]),
     PanelTitleComponent,
     CardDirective,
+    MapItemPositionDirective,
     NzIconModule,
     NzTableModule,
     NgxEchartsModule,
@@ -55,7 +76,17 @@ import {InstanceStatusDescPipe} from "../../shared/pipe/instance-status-desc.pip
     EmptyEchartsDirective,
     NzToolTipModule,
     HealthStatusDescPipe,
-    InstanceStatusDescPipe
+    InstanceStatusDescPipe,
+    InstanceMaintenanceAttrPipe,
+    NzDescriptionsModule,
+    NzFormModule,
+    NzInputModule,
+    NzRadioModule,
+    NzTagModule,
+    NzDropDownModule,
+    NgOptimizedImage,
+    LetDirective,
+    NzModalModule
   ],
   providers: []
 })

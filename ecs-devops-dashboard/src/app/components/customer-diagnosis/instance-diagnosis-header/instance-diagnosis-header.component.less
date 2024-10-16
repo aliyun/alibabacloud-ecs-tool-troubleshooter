@@ -1,0 +1,42 @@
+:host {
+
+  .diagnosis-header-container {
+
+    .diagnosis-header-container-content {
+      height: 32px;
+      font-size: 14px;
+      display: flex;
+      align-items: flex-end;
+
+      > div {
+        display: inline-block;
+        vertical-align: bottom;
+        margin-right: 20px;
+        cursor: pointer;
+
+        &:hover {
+          color: #40a9ff;
+        }
+      }
+    }
+
+    .diagnosis-header-container-content-active {
+      font-weight: 600;
+      font-size: 14px;
+      position: relative;
+      color: #1890ff !important;
+    }
+
+    .diagnosis-header-container-content-active::after {
+      content: '';
+      display: inline-block;
+      width: 100%;
+      height: 1px;
+      background-color: #1890ff;
+      position: absolute;
+      left: 0;
+      bottom: -2px;
+    }
+
+  }
+}

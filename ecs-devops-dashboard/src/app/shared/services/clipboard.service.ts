@@ -20,7 +20,7 @@ export class ClipboardService implements OnDestroy {
       return;
     }
     this.copyContent(content)
-    this.store.dispatch(displaySuccessMessage({ content: "已复制" }))
+    this.store.dispatch(displaySuccessMessage({ content: "已复制到剪切板" }))
   }
 
   private copyContent(content: string) {

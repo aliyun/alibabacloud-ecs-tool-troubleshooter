@@ -1,0 +1,72 @@
+<div class="event-distribution-container">
+  <nz-spin [nzSpinning]="loading">
+    <div #mapEventContainer class="event-distribution-container-img">
+      <img alt="" src="assets/map.png">
+    </div>
+
+    <div class="event-distribution-content">
+      <ng-container *ngFor="let data of regionData">
+        <div
+          [nzPopoverContent]="contentTemplate"
+          [regionId]="data.RegionId"
+          [width]="getWidth()"
+          (click)="eventClick(data.RegionId)"
+          class="event-distribution-content-item"
+          nz-popover
+          nzPopoverTrigger="hover"
+          opsMapItemPosition
+          *ngrxLet="getEventData(data.RegionId) as eventInfo"
+        >
+          <div *ngIf="eventInfo.eventTypeCount === 0 && eventInfo.instanceCount > 0" class="event-distribution-content-item-spot">
+            <ng-container *ngTemplateOutlet="naturalCoordinateSpot;"></ng-container>
+          </div>
+
+          <div *ngIf="eventInfo.eventTypeCount > 0" class="event-distribution-content-item-spot">
+            <ng-container *ngTemplateOutlet="errorCoordinateSpot;"></ng-container>
+          </div>
+
+          <div *ngIf="eventInfo.eventTypeCount > 0 || eventInfo.instanceCount > 0">
+            <div class="event-distribution-content-item-font">{{data.LocalName}}</div>
+          </div>
+          <ng-template #contentTemplate>
+            <ng-container *ngrxLet="getEventData(data.RegionId) as eventInfo">
+              <div class="event-distribution-content-item-detail">
+                <div>
+                  <div>实例数量</div>
+                  <div style="color: #39A503">{{eventInfo.instanceCount || 0}}</div>
+                </div>
+                <div>
+                  <div>事件数量</div>
+                  <div style="color: #0070CC">{{eventInfo.eventCount || 0}}</div>
+                </div>
+                <div>
+                  <div>事件类型数量</div>
+                  <div style="color: #fdb814">{{eventInfo.eventTypeCount || 0}}</div>
+                </div>
+              </div>
+            </ng-container>
+          </ng-template>
+        </div>
+      </ng-container>
+    </div>
+  </nz-spin>
+</div>
+
+<!--正常地域点位-->
+<ng-template #naturalCoordinateSpot>
+  <img alt="图片"
+       height="19.3" src="assets/map_natural_coordinate_spot.png" width="14">
+</ng-template>
+
+<!--选中地域点位-->
+<ng-template #checkedCoordinateSpot>
+  <img alt="图片"
+       height="25.3" src="assets/map_checked_coordinate_spot.png" width="19">
+
+</ng-template>
+
+<!--异常地域点位-->
+<ng-template #errorCoordinateSpot>
+  <img alt="图片"
+       height="17" src="assets/map_error_coordinate_spot.png" width="17">
+</ng-template>

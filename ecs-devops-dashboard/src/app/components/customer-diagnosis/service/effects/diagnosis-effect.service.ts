@@ -1,27 +1,51 @@
 import {ComponentStore, tapResponse} from "@ngrx/component-store";
 import {inject, Injectable} from "@angular/core";
-import {delay, expand, map, mergeMap, reduce, switchMap, takeWhile} from "rxjs/operators";
-import {catchError, EMPTY, from, Observable, tap} from "rxjs";
+import {delay, expand, map, reduce, switchMap, takeWhile} from "rxjs/operators";
+import {catchError, EMPTY, Observable, of, tap} from "rxjs";
 import {finishedStatus} from "../../constants/customer-diagnosis.constants";
 import {EcsApiService} from "../../../../api/ecs-api.service";
 import {Store} from "@ngrx/store";
-import {displayWarningMessage} from "../../../../ngrx/actions/global.action";
+import {OosApiService} from "../../../../api/oos-api.service";
 
 
 @Injectable()
 export class DiagnosisEffectService extends ComponentStore<any> {
   constructor() {
     super({
-      loading: {
-        desc: null,
-        isLoading: false
-      },
       createResult: {
         spinning: false,
         data: null,
         error: null
       },
+      reportDetail: {
+        spinning: false,
+        data: null,
+        error: null
+      },
       reports: {
+        spinning: false,
+        data: {
+          nextToken: "",
+          reports: []
+        },
+        error: null
+      },
+      instanceInfo: {
+        spinning: false,
+        data: [],
+        error: null
+      },
+      instanceCloudAssistant: {
+        spinning: false,
+        data: [],
+        error: null
+      },
+      oosRegionInfo: {
+        spinning: false,
+        data: [],
+        error: null
+      },
+      instanceDiagnosisTaskList: {
         spinning: false,
         data: null,
         error: null
@@ -30,6 +54,8 @@ export class DiagnosisEffectService extends ComponentStore<any> {
   }
 
   private ecsApiService = inject(EcsApiService)
+
+  private oosApiService = inject(OosApiService)
 
   private store = inject(Store)
 
@@ -40,96 +66,145 @@ export class DiagnosisEffectService extends ComponentStore<any> {
     })
   }
 
-  /**
-   * 创建诊断报告
-   */
-  public createDiagnosticReport = this.effect((ob: Observable<any>) => {
+  public createInstanceDiagnosticReport(param: any) {
+    return this.ecsApiService.createDiagnosticReport(param).pipe(
+      map((data: any) => {
+        return data['ReportId']
+      }),
+      catchError((error: any) => {
+        console.log(`create diagnose error`, error)
+        return of(null)
+      })
+    )
+  }
+
+  public batchCreateDiagnosticReport(param: any) {
+    return this.oosApiService.startExecution(param).pipe(
+      map((data: any) => {
+        return data
+      }),
+      catchError((error: any) => {
+        console.log(`create batch diagnose error`, error)
+        return of(null)
+      })
+    )
+  }
+
+  public readonly queryDiagnosisTaskList = this.effect((ob: Observable<any>) => {
     return ob.pipe(
-      tap(val => {
-        this.patchState({loading: {isLoading: true, desc: "诊断中..."}})
-        this.patchState({createResult: {spinning: true, data: null, error: null}})
-        this.patchState({reports: {spinning: true, data: null, error: null}})
-      }),
-      // 查询实例信息
-      switchMap(param => {
-        return this.queryInstanceInfo(param.instanceId).pipe(
-          map(data => {
-            return [param, data]
-          }),
-          catchError(() => {
-            this.patchState({loading: {isLoading: false, desc: null}})
-            this.patchState({createResult: {spinning: false, data: null, error: null}})
-            this.patchState({reports: {spinning: false, data: null, error: null}})
-            return EMPTY
-          })
-        )
-      }),
-      switchMap(([param, data]: any) => {
-        const request = {
-          RegionId: data.RegionId,
-          ResourceId: param.instanceId,
-          StartTime: param.startTime,
-          EndTime: param.endTime
-        }
-        // 发起诊断
-        return this.ecsApiService.createDiagnosticReport(request).pipe(
-          tapResponse({
-            next: (value: any) => {
-              const res = {
-                reportId: value.ReportId,
-                instanceId: param.instanceId,
-                regionId: data.RegionId
-              }
-              this.patchState({createResult: {spinning: false, data: res, error: null}})
-              // 触发查询 诊断报告结果
-              this.queryDiagnosticReport(res)
-            },
-            error: () => {
-              this.patchState({loading: {isLoading: false, desc: null}})
-              this.patchState({createResult: {spinning: false, data: null, error: null}})
-              this.patchState({reports: {spinning: false, data: null, error: null}})
+      tap((param: any) => {
+        if (param.NextToken === "") {
+          this.patchState({
+            instanceDiagnosisTaskList: {
+              spinning: true,
+              data: null,
+              error: null
             }
-          }),
-          catchError(error => {
-            console.log(`create diagnose error`, error)
-            return EMPTY
           })
-        )
+        }
+      }),
+      switchMap((params: any) => {
+        return this.loadDiagnosisTask(params)
+      }),
+      tapResponse({
+        next: (value: any) => {
+          const lastValue = this.get(state => state.instanceDiagnosisTaskList)?.data?.Executions || []
+          this.patchState({
+            instanceDiagnosisTaskList: {
+              spinning: false,
+              data: {
+                Executions: [...lastValue, ...value.Executions],
+                NextToken: value.NextToken || ""
+              },
+              error: null
+            }
+          })
+        },
+        error: error => {
+          console.log(error)
+          this.patchState({
+            instanceDiagnosisTaskList: {
+              spinning: false,
+              data: null,
+              error: null
+            }
+          })
+        }
       })
     )
   })
 
-  /**
-   * 查询诊断报告
-   */
-  private queryDiagnosticReport = this.effect((ob: Observable<{
-    reportId?: string | null,
-    instanceId?: string | null,
-    regionId: string
+  public loadDiagnosisTask(params: any) {
+    return this.oosApiService.listExecutions(params).pipe(catchError((err) => {
+      console.log(`load diagnosis task error`, err)
+      return of(null)
+    }))
+  }
+
+  public loadAllDiagnosisTask(params: any) {
+    return this.oosApiService.listExecutions(params).pipe(
+      expand((value: any) => {
+        if (value['NextToken']) {
+          params['NextToken'] = value['NextToken']
+          return this.loadDiagnosisTask(params)
+        } else {
+          return EMPTY
+        }
+      }, 1),
+      takeWhile((val: any) => {
+        return val['NextToken'] != null || val['NextToken'] !== ""
+      }, true),
+      reduce((v1: [], v2: any) => {
+        const values = (v2['Executions'] as []);
+        v1.push(...values)
+        return v1
+      }, []),
+      map((res) => {
+        return res
+      }),
+      catchError(err => {
+        console.log(`query all diagnosis task error`, err)
+        return of([])
+      })
+    )
+  }
+
+  public loadTaskExecutions(params: any) {
+    return this.oosApiService.listTaskExecutions(params).pipe(catchError((err) => {
+      console.log(`load task executions error`, err)
+      return of(null)
+    }))
+  }
+
+  public updateExecution(params: any) {
+    return this.oosApiService.updateExecution(params).pipe(
+      catchError((err) => {
+        console.log(`update execution error`, err)
+        return of(null)
+      })
+    )
+  }
+
+  public readonly queryReportDetail = this.effect((ob: Observable<{
+    ReportId: string,
+    RegionId: string
   }>) => {
     return ob.pipe(
       tap(() => {
-        this.patchState({loading: {isLoading: true, desc: "查询报告..."}})
-        this.patchState({reports: {spinning: true, data: null, error: null}})
+        this.patchState({reportDetail: {spinning: true, data: null, error: null}})
       }),
       switchMap(param => {
-        const request = {
-          RegionId: param.regionId,
-          ReportId: param.reportId
-        }
-        return this.queryDiagnoseReportAttr(request).pipe(
+        return this.queryDiagnoseReportAttr(param).pipe(
           // expand 递归查询 直至报告完成
-          expand((value: any) => this.reportIsFinished(value) ? EMPTY : this.queryDiagnoseReportAttr(request).pipe(delay(5000)), 1),
+          expand((value: any) => this.reportIsFinished(value) ? EMPTY : this.queryDiagnoseReportAttr(param).pipe(delay(5000)), 1),
           takeWhile((value) => !this.reportIsFinished(value), true),
           tapResponse({
             next: value => {
-              this.patchState({loading: {isLoading: false, desc: null}})
-              this.patchState({reports: {spinning: false, data: [value], error: null}})
+              this.patchState({reportDetail: {spinning: false, data: value, error: null}})
             },
             error: error => {
               console.log(error)
-              this.patchState({loading: {isLoading: false, desc: null}})
-              this.patchState({reports: {spinning: false, data: null, error: null}})
+              this.patchState({reportDetail: {spinning: false, data: null, error: null}})
             }
           })
         )
@@ -137,115 +212,260 @@ export class DiagnosisEffectService extends ComponentStore<any> {
     )
   })
 
-  /**
-   * 查询历史诊断报告
-   */
-  public queryHistoryDiagnosticReport = this.effect((ob: Observable<{
-    reportId?: string | null,
-    instanceId?: string | null,
-    regionId: string
-  }>) => {
+  public readonly queryHistoryReportWithPage = this.effect((ob: Observable<any>) => {
     return ob.pipe(
-      tap(() => {
-        this.patchState({loading: {isLoading: true, desc: "查询报告..."}})
-        this.patchState({reports: {spinning: true, data: null, error: null}})
+      tap((param: any) => {
+        if (param.NextToken === "") {
+          this.patchState({
+            reports: {
+              spinning: true,
+              data: {
+                reports: [],
+                nextToken: ""
+              },
+              error: null
+            }
+          })
+        }
+
       }),
-      switchMap(param => {
-        // 按照实例id查询, 需要查询实例id 地域
-        if (param.instanceId) {
-          return this.queryInstanceInfo(param.instanceId).pipe(
-            map((data: any) => {
-              return {
-                reportId: param.reportId,
-                instanceId: param.instanceId,
-                regionId: data.RegionId
+      switchMap((param: any) => {
+        return this.ecsApiService.describeDiagnosticReports(param).pipe(catchError((err) => {
+          console.log(`query history report error`, err)
+          return of(null)
+        }))
+      }),
+      tapResponse({
+        next: (value: any) => {
+          if (value === null) {
+            this.patchState({
+              reports: {
+                spinning: false,
+                data: {
+                  nextToken: "",
+                  reports: []
+                },
+                error: null
               }
-            }),
-            catchError(() => {
-              this.patchState({loading: {isLoading: false, desc: null}})
-              this.patchState({reports: {spinning: false, data: null, error: null}})
-              return EMPTY
             })
-          )
-        }
-        // 按照报告id 查询 需要全地域查询归属 暂不支持
-        if (param.reportId) {
-          this.store.dispatch(displayWarningMessage({
-            content: '诊断报告id查询暂不支持'
-          }))
-          this.patchState({loading: {isLoading: false, desc: null}})
-          this.patchState({reports: {spinning: false, data: null, error: null}})
-          return EMPTY
-        }
-        // 不会到这里
-        return EMPTY
-      }),
-      switchMap((param) => {
-        // 按照实例id regionId 查询报告信息
-        const request = {
-          RegionId: param.regionId,
-          ResourceId: param.instanceId,
-          MaxResult: 100
-        }
-        return this.queryDiagnoseReport(request).pipe(
-          map((data: any) => {
-            if (data && data['Reports'] && data['Reports']['Report'].length > 0) {
-              return {
-                regionId: param.regionId,
-                reports: data['Reports']['Report']
-              }
-            }
-            return {
-              regionId: param.regionId,
-              reports: []
-            }
-          }),
-          catchError(error => {
-            console.log(`query diagnose report error`)
-            return EMPTY
-          })
-        )
-      }),
-      switchMap((data: any) => {
-        const {regionId, reports} = data
-        const params = reports.map((d: any) => {
-          return {
-            RegionId: regionId,
-            ReportId: d.ReportId
+            return
           }
-        })
-        return from(params).pipe(
-          mergeMap(param => {
-            return this.queryDiagnoseReportAttr(param)
-          }),
-          reduce((v1: any[], v2: any) => {
-            if (v2) {
-              v1.push(v2)
-            }
-            return v1
-          }, []),
-          tapResponse({
-            next: value => {
-              this.patchState({loading: {isLoading: false, desc: null}})
-              this.patchState({reports: {spinning: false, data: value, error: null}})
-            },
-            error: error => {
-              console.log(error)
-              this.patchState({loading: {isLoading: false, desc: null}})
-              this.patchState({reports: {spinning: false, data: null, error: null}})
+          const reports = this.get(state => {
+            if (state.reports.data) {
+              return state.reports.data.reports || []
             }
           })
-        )
+          this.patchState({
+            reports: {
+              spinning: false,
+              data: {
+                reports: [...reports, ...value['Reports']['Report']],
+                nextToken: value.NextToken
+              },
+              error: null
+            }
+          })
+        },
+        error: error => {
+          console.log(error)
+          this.patchState({
+            reports: {
+              spinning: false,
+              data: {
+                nextToken: "",
+                reports: []
+              },
+              error: null
+            }
+          })
+        }
       })
     )
   })
+
+  public readonly loadInstanceInfoWithRegion = this.effect((ob: Observable<any>) => {
+    return ob.pipe(
+      tap(() => {
+        this.patchState({instanceInfo: {spinning: true, data: [], error: null}})
+      }),
+      switchMap((param: any) => {
+        param.MaxResults = 100
+        return this.loadInstanceData(param)
+      }),
+      tapResponse({
+        next: value => {
+          this.patchState({instanceInfo: {spinning: false, data: value, error: null}})
+        },
+        error: error => {
+          console.log(error)
+          this.patchState({instanceInfo: {spinning: false, data: [], error: null}})
+        }
+      })
+    )
+  })
+
+  private loadInstanceData(param: { RegionId: string, [key: string]: any }) {
+    return this.ecsApiService.describeInstances(param).pipe(
+      expand((value: any) => {
+        if (value['NextToken']) {
+          param['NextToken'] = value['NextToken']
+          param['PageNumber'] = value['PageNumber'] + 1
+          return this.ecsApiService.describeInstances(param)
+        } else {
+          return EMPTY
+        }
+      }, 1),
+      takeWhile((val: any) => {
+        return val['NextToken'] != null || val['NextToken'] !== ""
+      }, true),
+      reduce((v1: [], v2: any) => {
+        const values = (v2['Instances']['Instance'] as []);
+        v1.push(...values)
+        return v1
+      }, []),
+      map((res) => {
+        return res
+      }),
+      catchError(err => {
+        console.log(`query instance error`, err)
+        return of([])
+      })
+    )
+  }
+
+  public loadAllInstanceCloudAssistantData = this.effect((ob: Observable<any>) => {
+    return ob.pipe(
+      tap(() => {
+        this.patchState({instanceCloudAssistant: {spinning: true, data: [], error: null}})
+      }),
+      switchMap((param: any) => {
+        param.MaxResults = 50
+        return this.loadInstanceCloudAssistantData(param);
+      }),
+      tapResponse({
+        next: value => {
+          this.patchState({instanceCloudAssistant: {spinning: false, data: value, error: null}})
+        },
+        error: error => {
+          console.log(error)
+          this.patchState({instanceCloudAssistant: {spinning: false, data: [], error: null}})
+        }
+      })
+    );
+  })
+
+  private loadInstanceCloudAssistantData(param: { RegionId: string, [key: string]: any }) {
+    return this.ecsApiService.describeCloudAssistantStatus(param).pipe(
+      expand((value: any) => {
+        if (value['NextToken']) {
+          param['NextToken'] = value['NextToken']
+          param['PageNumber'] = value['PageNumber'] + 1
+          return this.ecsApiService.describeCloudAssistantStatus(param)
+        } else {
+          return EMPTY
+        }
+      }, 1),
+      takeWhile((val: any) => {
+        return val['NextToken'] != null || val['NextToken'] !== ""
+      }, true),
+      reduce((v1: [], v2: any) => {
+        const values = (v2['InstanceCloudAssistantStatusSet']['InstanceCloudAssistantStatus'] as []);
+        v1.push(...values)
+        return v1
+      }, []),
+      map((res) => {
+        return res
+      }),
+      catchError(err => {
+        console.log(`query instance cloud assistant error`, err)
+        return of([])
+      })
+    )
+  }
+
+  public readonly queryOosRegionInfo = this.effect((ob) => {
+    return ob.pipe(
+      tap(() => {
+        this.patchState({oosRegionInfo: {spinning: true, data: [], error: null}})
+      }),
+      switchMap(() => {
+        return this.loadOosRegionData();
+      }),
+      tapResponse({
+        next: value => {
+          this.patchState({oosRegionInfo: {spinning: false, data: value, error: null}})
+        },
+        error: error => {
+          console.log(error)
+          this.patchState({oosRegionInfo: {spinning: false, data: [], error: null}})
+        }
+      })
+    );
+  })
+
+  private loadOosRegionData() {
+    return this.oosApiService.describeRegions().pipe(
+      map((res: any) => {
+        if (Array.isArray(res.Regions)) {
+          return res.Regions
+        }
+        return res.Regions.Region
+      }),
+      catchError(err => {
+        console.log(`query oos region info error`, err)
+        return of([])
+      })
+    )
+  }
+
+  public verifyDiagnosisRole(params: any) {
+    return this.oosApiService.generateExecutionPolicy(params).pipe(
+      map((res: any) => {
+        return {
+          success: true,
+          data: res
+        }
+      }),
+      catchError(err => {
+        console.log(`query oos region info error`, err)
+        return of({
+          success: false,
+          data: err.error
+        })
+      })
+    )
+  }
+
+  public cancelDiagnosisTask(params: any) {
+    return this.oosApiService.cancelExecution(params).pipe(
+      catchError(err => {
+        console.log(`cancel oos task info error`, err)
+        return of(null)
+      })
+    )
+  }
+
+  public deleteDiagnosisTask(params: any) {
+    return this.oosApiService.deleteExecutions(params).pipe(
+      catchError(err => {
+        console.log(`cancel oos task info error`, err)
+        return of(null)
+      })
+    )
+  }
+
+  public triggerExecution(params: any) {
+    return this.oosApiService.triggerExecution(params).pipe(
+      catchError(err => {
+        console.log(`trigger oos task info error`, err)
+        return of(null)
+      })
+    )
+  }
+
 
   private queryDiagnoseReportAttr(param: any) {
     return this.ecsApiService.describeDiagnosticReportAttributes(param)
-  }
-
-  private queryDiagnoseReport(request: any) {
-    return this.ecsApiService.describeDiagnosticReports(request)
   }
 
   private reportIsFinished(report: any) {
@@ -257,8 +477,15 @@ export class DiagnosisEffectService extends ComponentStore<any> {
     return false
   }
 
+  public readonly diagnosisTaskListData = this.select(state => state.instanceDiagnosisTaskList)
+
+  public readonly oosRegionData = this.select(state => state.oosRegionInfo)
+
   public readonly reportsData = this.select(state => state.reports)
 
-  public readonly loadingData = this.select(state => state.loading)
+  public readonly reportsDetailData = this.select(state => state.reportDetail)
 
+  public readonly instanceData = this.select(state => state.instanceInfo)
+
+  public readonly instanceCloudAssistantData = this.select(state => state.instanceCloudAssistant)
 }

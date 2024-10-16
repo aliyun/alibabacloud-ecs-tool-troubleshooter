@@ -18,6 +18,9 @@ export class AliYunClientService {
 
   private readonly SignatureAlgorithm = "ACS3-HMAC-SHA256"
 
+  public sendPostRequest(action: string, params: any, content?: HttpContext) {
+    return this.request("POST", action, params, content)
+  }
 
   /**
    * 调用 sdk
@@ -27,6 +30,10 @@ export class AliYunClientService {
    * @private
    */
   public sendRequest(action: string, params: any, content?: HttpContext) {
+    return this.request("GET", action, params, content)
+  }
+
+  private request(method: string, action: string, params: any, content?: HttpContext) {
     // 处理 request
     if (!params) {
       params = {}
@@ -42,28 +49,44 @@ export class AliYunClientService {
     }
     const endpoint = this.selectEndpoint(regionId);
 
-    // header 信息
+    let request: any = {
+      queryParam: "",
+      body: params,
+      bodyStr: JSON.stringify(params)
+    }
+    if (method == "GET") {
+      request = {
+        queryParam: params,
+        body: null,
+        bodyStr: ""
+      }
+    }
+
     const requestHeaders: any = {
       "x-acs-action": action,
       "x-acs-version": this.config.getVersion(),
       "x-acs-signature-nonce": SystemUtil.generateRandomString(20),
       "x-acs-date": DateUtils.toUTCString(new Date()),
-      "x-acs-content-sha256": SignUtils.hashSha256("") // get 请求 content hash 为空
+      "x-acs-content-sha256": SignUtils.hashSha256(request.bodyStr)
     }
 
-    requestHeaders['Authorization'] = this.generatorAuthorization(params, {...requestHeaders, host: endpoint})
+    requestHeaders['Authorization'] = this.generatorAuthorization(method, request, {
+      ...requestHeaders,
+      host: endpoint
+    })
 
     if (content == null) {
       content = new HttpContext()
     }
     content.set(EXT_PARAM, params)
-    // 获取 endpoint
-    return this.httpClient.request("GET", `https://${endpoint}/`, {
+    return this.httpClient.request(method, `https://${endpoint}/`, {
       headers: requestHeaders,
-      params: params,
+      params: request.queryParam,
+      body: request.body,
       context: content
     })
   }
+
 
   private transformObject(obj: any) {
     for (const key in obj) {
@@ -72,7 +95,15 @@ export class AliYunClientService {
         delete obj[key];
         value.forEach((val: any, index: any) => {
           const newKey = `${key}.${index + 1}`;
-          obj[newKey] = val.trim();
+          if (typeof val === 'object') {
+            Object.keys(val).forEach(_key => {
+              obj[`${newKey}.${_key}`] = val[_key];
+            })
+          } else if (typeof val === 'string') {
+            obj[newKey] = val.trim();
+          } else {
+            obj[newKey] = val;
+          }
         });
       }
     }
@@ -83,13 +114,12 @@ export class AliYunClientService {
     return this.config.getEndpoint(regionId)
   }
 
-  private generatorAuthorization(request: any, headers: any) {
-    const canonicalQueryString = this.canonicalQueryString(request);
+  private generatorAuthorization(method: string, request: any, headers: any) {
+    const canonicalQueryString = this.canonicalQueryString(request.queryParam);
     const canonicalHeaders = this.canonicalHeaders(headers)
     const signedHeaders = this.signedHeaders(headers);
-    const hashedRequestPayload = SignUtils.hashSha256("");
-    const canonicalRequest = this.canonicalRequest("GET", "/", canonicalQueryString, canonicalHeaders, signedHeaders, hashedRequestPayload);
-
+    const hashedRequestPayload = SignUtils.hashSha256(request.bodyStr);
+    const canonicalRequest = this.canonicalRequest(method, "/", canonicalQueryString, canonicalHeaders, signedHeaders, hashedRequestPayload);
     const strToSign = this.SignatureAlgorithm + '\n' + SignUtils.hashSha256(canonicalRequest)
     const signature = SignUtils.hmacSHA256(strToSign, this.config.getAccessKeySecret())
 
@@ -116,7 +146,14 @@ export class AliYunClientService {
     let canonicalQueryString = ""
     if (param) {
       keys.forEach(key => {
-        canonicalQueryString += "&" + encodeURIComponent(key) + "=" + encodeURIComponent(param[key])
+        canonicalQueryString += "&" + encodeURIComponent(key) + "="
+        if (typeof param[key] === "string" && param[key].indexOf("*")) {
+          // fix * sign
+          canonicalQueryString += encodeURIComponent(param[key])
+            .replaceAll("*", "%2A")
+        } else {
+          canonicalQueryString += encodeURIComponent(param[key])
+        }
       })
     }
     return canonicalQueryString.replace(/^&/, "");

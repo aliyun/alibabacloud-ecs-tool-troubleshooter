@@ -1,0 +1,38 @@
+<div class="instance-diagnosis-report-container">
+  <div *ngIf="isRouteJump" class="instance-diagnosis-report-container-title">
+    <span (click)="backToDiagnosis()" nz-icon nzTheme="outline" nzType="arrow-left"></span>
+    <span>诊断报告</span>
+  </div>
+  <nz-spin [nzSpinning]="loadingReport">
+    <div
+      [ngClass]="{'instance-diagnosis-report-container-info': true,'instance-diagnosis-report-container-info-comp':isRouteJump}"
+      nz-row>
+      <div nz-col nzSpan="8">
+        <div>诊断的时间范围：</div>
+        <div>{{getLocalTime(report?.StartTime)}} - {{getLocalTime(report?.EndTime)}}</div>
+      </div>
+      <div nz-col nzSpan="5">
+        <div>资源ID：</div>
+        <div>
+          <span [showIcon]="false" opsCopyText>{{report?.ResourceId || ""}}</span>
+        </div>
+      </div>
+      <div nz-col nzSpan="5">
+        <div>报告ID：</div>
+        <div>
+          <span [showIcon]="false" opsCopyText>{{report?.ReportId || ""}}</span>
+        </div>
+      </div>
+      <div nz-col nzSpan="5">
+        <div>诊断时间：</div>
+        <div>{{getLocalTime(report?.CreationTime)}}</div>
+      </div>
+    </div>
+  </nz-spin>
+
+  <div>
+    <nz-skeleton [nzActive]="true" [nzLoading]="loadingReport">
+      <div #diagnoseReport class="report-content"></div>
+    </nz-skeleton>
+  </div>
+</div>

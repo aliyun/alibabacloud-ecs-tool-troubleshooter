@@ -1,11 +1,12 @@
 import {Component, DestroyRef, inject, OnDestroy, OnInit} from '@angular/core';
 import {Store} from "@ngrx/store";
-import {changeUrlSearchParamsAction} from "../../../ngrx/actions/global.action";
+import {changeUrlSearchParamsAction, displayWarningMessage} from "../../../ngrx/actions/global.action";
 import {selectQueryParams, selectRegionInfo} from "../../../ngrx/selectors/global.select";
 import {addDays, format} from "date-fns";
 import {HealthStatusEffectService} from "../services/effects/health-status-effect.service";
 import {GlobalConstant} from "../../../constants/constants";
 import {baseHistogramChart, basePieOptions} from "../../../shared/constants/echarts.constants";
+import {NzNotificationService} from "ng-zorro-antd/notification";
 
 @Component({
   selector: 'ops-health-status',
@@ -23,6 +24,8 @@ export class HealthStatusComponent implements OnInit, OnDestroy {
 
   private destroy = inject(DestroyRef);
   private healthStatusEffectService = inject(HealthStatusEffectService)
+
+  private nzNotificationService = inject(NzNotificationService)
 
   public region = 'cn-hangzhou';
   public dateRange = [addDays(new Date(), -7), new Date()];
@@ -45,6 +48,18 @@ export class HealthStatusComponent implements OnInit, OnDestroy {
   public instanceRegionFilter: any[] = []
 
   private regionIdMap: any = {}
+
+  injectVisible = false
+
+  injectData: any = {}
+
+  healthStatusType = "InsufficientData"
+
+  netInterfaceName = "eth0"
+
+  isWin = true
+
+  injectLoading = false
 
   private readonly filterSub = this.healthStatusEffectService.healthStatusData.subscribe(data => {
     const healthStatus: any = {}
@@ -150,6 +165,96 @@ export class HealthStatusComponent implements OnInit, OnDestroy {
   getRegionName(regionId: string) {
     const ele = this.regionIdMap[regionId];
     return ele ? ele.LocalName : regionId;
+  }
+
+  injectFault(data: any) {
+    this.injectLoading = false
+    this.injectData = data
+    this.verifyInstance()
+    this.injectVisible = true
+  }
+
+  verifyInstance() {
+    this.injectLoading = true
+    this.healthStatusEffectService.queryInstance({
+      RegionId: this.injectData.regionId,
+      InstanceIds: JSON.stringify([this.injectData.instanceId])
+    }).subscribe((data: any) => {
+      this.injectLoading = false
+      if (data === null) {
+        this.store.dispatch(displayWarningMessage({
+          content: '实例查询失败，请稍后重试'
+        }))
+        return
+      }
+      if (data.Instances && data.Instances.Instance && data.Instances.Instance.length > 0) {
+        this.isWin = data.Instances.Instance[0].OSType === 'windows'
+      }
+      if (this.isWin) {
+        this.healthStatusType = "InsufficientData"
+      }
+    })
+  }
+
+  cancelInject() {
+    this.injectVisible = false
+  }
+
+  confirmInject() {
+    if (this.healthStatusType === 'Impaired' && this.netInterfaceName.trim() === '') {
+      this.store.dispatch(displayWarningMessage({
+        content: '请输入需要关闭arp功能的实例网卡名称'
+      }))
+      return
+    }
+
+    this.injectLoading = true
+    if (this.healthStatusType === 'Impaired') {
+      this.injectImpaired()
+    } else {
+      this.injectInsufficientData()
+    }
+  }
+
+  injectInsufficientData() {
+    this.healthStatusEffectService.stopInstance({
+      InstanceId: this.injectData.instanceId,
+      RegionId: this.injectData.regionId
+    }).subscribe(data => {
+      this.injectVisible = false
+      this.injectLoading = false
+      if (data === null) {
+        this.store.dispatch(displayWarningMessage({
+          content: '实例关机失败，请稍后重试'
+        }))
+        return
+      }
+      this.nzNotificationService.success('实例故障模拟成功', '请稍后刷新查询实例健康状态')
+      setTimeout(() => {
+        this.searchDetail();
+      }, 1000)
+    })
+  }
+
+  injectImpaired() {
+    this.healthStatusEffectService.injectFaults({
+      RegionId: this.injectData.regionId,
+      InstanceId: [this.injectData.instanceId],
+      Type: "RunShellScript",
+      RepeatMode: "Once",
+      Timeout: 60,
+      CommandContent: `ifconfig ${this.netInterfaceName.trim()} -arp && systemctl stop aliyun.service &`
+    }).subscribe(data => {
+      this.injectVisible = false
+      this.injectLoading = false
+      if (data === null) {
+        this.store.dispatch(displayWarningMessage({
+          content: '实例模拟服务受损状态失败，请稍后重试'
+        }))
+        return
+      }
+      this.nzNotificationService.success('实例故障模拟成功', '预计3分钟内生效，请稍后刷新查询实例健康状态')
+    })
   }
 
   ngOnDestroy(): void {

@@ -4,6 +4,7 @@ import {Component, Input, TemplateRef, ViewChild,} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {CopyTextDirective} from '../../directive/copy-text.directive';
 import {NzPopoverModule} from 'ng-zorro-antd/popover';
+import {TimeoutError} from "rxjs";
 
 @Component({
   selector: 'ops-error-dialog',
@@ -51,6 +52,21 @@ export class ErrorDialogComponent {
 
   }
 
+  initializeHttpTimeoutError(error: {
+    Code: string,
+    Message: string,
+    HostId?: string,
+  }){
+    if (this.httpErrorResponseTemplate && error) {
+      this.displayTemplate = this.httpErrorResponseTemplate;
+      this.contextExp = {
+        code: error.Code,
+        hostId: error.HostId,
+        message: error.Message
+      }
+    }
+  }
+
   initializeHttpApiErrorResponse(error: {
     Code: string,
     Message: string,
@@ -74,11 +90,14 @@ export class ErrorDialogComponent {
     if (this.httpErrorResponseTemplate && httpErrorResponse) {
       this.displayTemplate = this.httpErrorResponseTemplate;
       const name = this.getUrlPath(httpErrorResponse.url);
-      let code = httpErrorResponse.status
+      let code: string|number = httpErrorResponse.status
       const message = httpErrorResponse.message
       const requestId = null;
       if (code == undefined) {
         code = 500
+      }
+      if (code === 408){
+        code = "Timeout"
       }
       this.contextExp = {
         code: code,

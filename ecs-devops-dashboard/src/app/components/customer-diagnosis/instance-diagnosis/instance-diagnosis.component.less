@@ -1,0 +1,201 @@
+:host {
+
+  .instance-diagnosis-container {
+    .instance-diagnosis-container-title {
+
+      .instance-diagnosis-container-title-create {
+        margin-bottom: 50px;
+      }
+
+      .instance-diagnosis-container-title-update {
+        height: 50px;
+        line-height: 50px;
+        font-size: 16px;
+        font-weight: 600;
+
+        span:first-child {
+          margin-right: 10px;
+          cursor: pointer;
+        }
+      }
+    }
+
+    .instance-diagnosis-container-content {
+      font-size: 13px;
+      margin: auto;
+      max-width: 1500px;
+      //min-height: calc(100vh - 200px);
+      min-width: 500px;
+      padding: 24px 78px 0;
+      position: relative;
+
+      .instance-diagnosis-title {
+        display: flex;
+        margin-bottom: 30px;
+
+        .instance-diagnosis-title-img {
+          margin-right: 30px;
+
+          img {
+            width: 120px;
+          }
+        }
+
+        .instance-diagnosis-title-content {
+
+          div:first-child {
+            font-weight: 400;
+            font-size: 28px;
+            line-height: 36px;
+            margin-bottom: 10px;
+          }
+
+          div:nth-child(2) {
+            font-size: 12px;
+            color: #333;
+          }
+        }
+
+      }
+
+      .instance-diagnosis-item {
+        //height: 32px;
+        line-height: 32px;
+        font-size: 12px;
+        margin-bottom: 10px;
+
+        div:first-child {
+          padding-right: 10px;
+          font-size: 13px;
+          font-weight: 400;
+        }
+
+        .instance-m-item-required::before {
+          content: "*";
+          color: #e00000;
+          display: inline-block;
+          font-family: SimSun, sans-serif;
+          font-size: 12px;
+          line-height: 1;
+        }
+
+        .instance-diagnosis-item-time-tips {
+          margin-left: 10px;
+          padding: 8px 12px 7px 14px;
+          background-color: #e8f4ff;
+          border: 1px solid #e8f4ff;
+          font-size: 12px;
+          color: #333;
+        }
+
+        .instance-m-item-instance-select {
+          display: flex;
+        }
+
+        .instance-m-item-regular-corn {
+
+          .instance-m-item-regular-corn-time {
+            div:first-child {
+              font-size: 12px;
+              color: #333;
+              line-height: 22px;
+              margin-top: 5px;
+            }
+
+            > div > span {
+              font-size: 12px;
+              color: #333;
+            }
+          }
+
+          .instance-m-item-regular-corn-show-time {
+            > div:first-child {
+              font-size: 12px;
+              color: #333;
+              line-height: 22px;
+              margin-top: 5px;
+            }
+
+            .instance-m-item-regular-corn-show-time-steps {
+
+              /deep/ .ant-steps-item-container {
+                min-height: 30px;
+              }
+
+              /deep/ .ant-steps-vertical > .ant-steps-item .ant-steps-item-content {
+                min-height: 30px;
+              }
+
+              /deep/ .ant-steps-vertical > .ant-steps-item > .ant-steps-item-container > .ant-steps-item-tail::after {
+                height: 8px;
+              }
+
+              /deep/ .ant-steps-item-title {
+                font-size: 12px;
+              }
+
+              /deep/ .ant-steps-icon {
+                font-size: 14px;
+              }
+
+              /deep/ .ant-steps-vertical > .ant-steps-item .ant-steps-item-icon {
+                margin-right: 6px;
+              }
+
+              /deep/ .ant-steps-item-tail {
+                top: -7px;
+                left: 6px;
+              }
+
+              /deep/ .ant-steps-item-description {
+                display: none;
+              }
+            }
+          }
+        }
+      }
+
+      .instance-diagnosis-btn {
+        margin-top: 20px;
+
+        button {
+          margin-right: 10px;
+          font-size: 13px;
+        }
+      }
+
+    }
+
+  }
+
+}
+
+.instance-modal-search {
+  display: flex;
+  margin: 0 0 10px;
+
+  div {
+    flex: 1;
+  }
+
+  .instance-modal-search-tips {
+    line-height: 32px;
+    text-align: right;
+    padding-right: 15px;
+    color: #0064c8;
+  }
+
+  /deep/ .ant-select-single .ant-select-selector .ant-select-selection-item {
+    font-size: 13px;
+  }
+
+  /deep/ .ant-btn {
+    font-size: 13px;
+  }
+
+}
+
+/deep/ .ant-radio, .ant-radio-wrapper {
+  font-size: 13px !important;
+
+}

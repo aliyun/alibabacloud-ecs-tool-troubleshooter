@@ -53,11 +53,44 @@ export const selectAccessKeyExists = createSelector(selectAccessKeyInfo, (state:
 })
 
 /**
- * 返回 region 信息
+ * 返回 筛选后关注的 region 信息
  */
-export const selectRegionInfo = createSelector(createFeatureSelector("regionInfo"), (param: any) => {
+export const selectRegionInfo = createSelector(createFeatureSelector("regionInfo"), createFeatureSelector("selectedRegionInfo"), (param: any, selectedRegion: any) => {
+
+  let regionInfo = []
+  if (param && param['Region']) {
+    regionInfo = param['Region']
+  }
+  let selectedRegionData: any[] = []
+  if (selectedRegion && selectedRegion['selectedRegion']) {
+    selectedRegionData = selectedRegion['selectedRegion']
+  }
+
+  regionInfo = regionInfo.filter((item: any) => {
+    if (selectedRegionData.length === 0) {
+      return true
+    }
+    // 包含 则返回
+    return selectedRegionData.includes(item.RegionId);
+  })
+
+  return regionInfo
+})
+
+/**
+ * 返回全部地域信息
+ */
+export const selectAllRegionInfo = createSelector(createFeatureSelector("regionInfo"), (param: any) => {
   if (param && param['Region']) {
     return param['Region']
   }
   return []
 })
+
+export const selectFocusRegionInfo = createSelector(createFeatureSelector("selectedRegionInfo"), (param: any) => {
+  if (param) {
+    return param['selectedRegion'] || []
+  }
+  return []
+})
+

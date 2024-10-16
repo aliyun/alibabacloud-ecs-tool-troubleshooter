@@ -1,0 +1,97 @@
+:host {
+  .instance-task-detail-container {
+    background-color: #FFFFFF;
+    padding: 8px 16px;
+
+    .instance-task-detail-container-header {
+      display: flex;
+      line-height: 40px;
+      height: 40px;
+      margin-top: 10px;
+
+      > div {
+        flex: auto;
+      }
+
+      .instance-task-detail-container-title {
+
+        color: #333;
+        font-size: 28px;
+        font-weight: 500;
+
+        > span:first-child {
+          cursor: pointer;
+          font-size: 24px;
+        }
+
+        > span {
+          margin-right: 10px;
+        }
+
+        .instance-task-detail-container-title-status {
+          font-size: 14px;
+          font-weight: normal;
+          color: #333333;
+        }
+      }
+
+      .instance-task-detail-container-header-btn {
+        text-align: right;
+        font-size: 12px;
+
+        button {
+          font-size: 12px;
+          margin-right: 10px;
+        }
+      }
+    }
+
+    .instance-task-detail-container-content {
+      margin-top: 10px;
+
+      .instance-task-detail-container-content-item {
+
+        .instance-task-detail-container-content-item-title {
+          font-weight: 500;
+          font-size: 16px;
+          margin-bottom: 16px;
+        }
+
+        .instance-task-detail-container-content-item-info {
+          font-size: 12px;
+          display: flex;
+          flex-wrap: wrap;
+          line-height: 20px;
+          color: #333;
+
+          > div {
+            width: 33%;
+            margin-bottom: 16px;
+
+            > div:first-child {
+              font-weight: 600;
+              color: #555555;
+            }
+          }
+
+        }
+      }
+
+      .instance-diagnosis-sub-task-header {
+        display: flex;
+
+        > div {
+          padding: 0 16px;
+          cursor: pointer;
+        }
+
+        .instance-diagnosis-sub-task-header-active {
+          border-bottom: 2px solid #1890ff;
+          color: #1890ff;
+          font-weight: 500;
+        }
+      }
+    }
+
+  }
+}

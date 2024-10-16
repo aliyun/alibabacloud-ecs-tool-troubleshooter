@@ -1,0 +1,89 @@
+<div class="instance-m-container">
+  <div class="instance-m-tip">
+    <span nz-icon nzType="exclamation-circle" nzTheme="outline"></span>
+    <span>实例维护属性决定了实例发生非预期宕机或主动运维计划维护之后的恢复行为</span>
+  </div>
+
+  <div class="instance-m-form">
+    <div class="instance-m-item" nz-row>
+      <div class="instance-m-item-label" nz-col [nzSpan]="4">
+        实例Id:
+      </div>
+      <div class="instance-m-item-content" nz-col nzSpan="20">
+           <span *ngFor="let data of instanceIds">
+             <nz-tag [nzColor]="'green'">
+               {{data}}
+             </nz-tag>
+           </span>
+      </div>
+    </div>
+
+    <div class="instance-m-item" nz-row>
+      <div class="instance-m-item-label" nz-col [nzSpan]="4">
+        维护动作:
+      </div>
+      <div class="instance-m-item-content" nz-col nzSpan="20">
+        <nz-radio-group class="instance-m-radio-group" [(ngModel)]="maintenanceAction">
+          <div class="instance-m-radio" *ngFor="let data of radioOptions">
+            <div class="instance-m-radio-label">
+              <label nz-radio [nzValue]="data.value">{{data.label}}</label>
+            </div>
+            <div class="instance-m-radio-desc">
+              {{data.desc}}
+            </div>
+          </div>
+
+        </nz-radio-group>
+      </div>
+    </div>
+
+<!--    <div class="instance-m-item" nz-row>-->
+<!--      <div class="instance-m-item-label" nz-col [nzSpan]="4">-->
+<!--        是否发送事件:-->
+<!--      </div>-->
+<!--      <div class="instance-m-item-content" nz-col nzSpan="20">-->
+<!--        <nz-radio-group [(ngModel)]="notifyOnMaintenance">-->
+<!--          <label nz-radio [nzValue]="true">是</label>-->
+<!--          <label nz-radio [nzValue]="false">否</label>-->
+<!--        </nz-radio-group>-->
+<!--      </div>-->
+<!--    </div>-->
+
+    <div class="instance-m-item" nz-row>
+      <div class="instance-m-item-label" nz-col [nzSpan]="4">
+        维护窗口:
+      </div>
+      <div class="instance-m-item-content" nz-col nzSpan="20">
+       <div>
+         <nz-select
+           [(ngModel)]="startTime"
+           nzAllowClear
+           nzPlaceHolder="开始时间">
+           <nz-option *ngFor="let data of timeHourOptions" [nzValue]="data.value" [nzLabel]="data.label"></nz-option>
+         </nz-select>
+         <span style="margin: 0 10px"> - </span>
+         <nz-select
+           [(ngModel)]="endTime"
+           nzAllowClear
+           nzPlaceHolder="结束时间"
+         >
+           <nz-option *ngFor="let data of timeHourOptions" [nzValue]="data.value" [nzLabel]="data.label"></nz-option>
+         </nz-select>
+       </div>
+        <div class="instance-m-item-content-tip">
+          开始时间和结束时间必须同时设置，并且结束时间与开始时间需要间隔 1~23 个整小时。采用 UTC +8 时区
+        </div>
+      </div>
+    </div>
+
+    <div class="instance-m-item" nz-row>
+      <div class="instance-m-item-content instance-m-btn" nz-col nzOffset="4" nzSpan="20">
+        <button nz-button nzType="primary" [nzLoading]="loading" nzSize="default" (click)="submitForm()">修改</button>
+        <span style="padding: 5px"></span>
+        <button nz-button nzType="default" nzSize="default" (click)="close()">关闭</button>
+      </div>
+    </div>
+
+  </div>
+
+</div>

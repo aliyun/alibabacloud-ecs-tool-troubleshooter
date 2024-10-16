@@ -4,18 +4,18 @@ import {NzIconModule} from 'ng-zorro-antd/icon';
 import {NzInputModule} from 'ng-zorro-antd/input';
 import {NzEmptyModule} from 'ng-zorro-antd/empty';
 import {Store} from '@ngrx/store';
-import {changeMenuSelectIndexAction, closeMenuAction} from 'src/app/ngrx/actions/menu.action';
-import {RouterLink} from '@angular/router';
+import {closeMenuAction} from 'src/app/ngrx/actions/menu.action';
 import {MenuGroup, MenuItem} from '../../models/models';
-import {selectMenuData, selectMenuIndex} from 'src/app/ngrx/selectors/menu.selector';
+import {selectMenuData} from 'src/app/ngrx/selectors/menu.selector';
 import {Subscription} from 'rxjs';
 import {routerLinkAction} from 'src/app/ngrx/actions/global.action';
+import {selectCurrentUrlAndSearchParams} from "../../../ngrx/selectors/global.select";
 
 @Component({
   selector: 'ops-sidebar-menu',
   templateUrl: './sidebar-menu.component.html',
   styleUrls: ['./sidebar-menu.component.less'],
-  imports: [NzIconModule, NgFor, NgIf, NgTemplateOutlet, NzInputModule, NgClass, NzEmptyModule, JsonPipe, RouterLink],
+  imports: [NzIconModule, NgFor, NgIf, NgTemplateOutlet, NzInputModule, NgClass, NzEmptyModule, JsonPipe],
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush
 })
@@ -25,32 +25,38 @@ export class SidebarMenuComponent implements OnInit, OnDestroy {
   }
 
   public menuData: Array<MenuGroup> = []
-  public parentActiveIndex = 0
+  activeUrl = ''
   public childrenMenu?: Array<MenuItem>;
 
   private subscription = new Subscription();
 
   ngOnInit(): void {
 
-    // 实时监控菜单变化
     this.subscription.add(this.store.select(selectMenuData).subscribe(menuData => {
       this.menuData = menuData;
     }));
 
-    // 监听selectIndex 变化
-    this.store.select(selectMenuIndex).subscribe(index => {
-      this.parentActiveIndex = index
+    this.store.select(selectCurrentUrlAndSearchParams).subscribe(res => {
+      this.activeUrl = res.url
     })
+
   }
 
+  isActiveUrl(url: any) {
+    if (this.activeUrl === undefined) {
+      return false;
+    }
+    if (url === undefined) {
+      return false
+    }
+    return this.activeUrl.indexOf(url) > -1;
+  }
 
   closeEvent() {
     this.store.dispatch(closeMenuAction());
   }
 
   linkToPageByParentPage(param: MenuGroup, index: number) {
-    this.store.dispatch(changeMenuSelectIndexAction({index: index}))
-
     if (param && param.isLeaf) {
       const path = param.path;
       if (path) {

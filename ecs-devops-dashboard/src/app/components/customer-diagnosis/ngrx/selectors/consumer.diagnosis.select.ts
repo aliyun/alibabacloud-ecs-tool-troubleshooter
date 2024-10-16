@@ -5,12 +5,13 @@ import {selectQueryParams, selectRouteParams} from "src/app/ngrx/selectors/globa
  * 获取解析URL中携带的参数
  */
 export const selectCustomerDiagnoseUrlParam = createSelector(selectQueryParams, selectRouteParams, (state, routeParam) => {
-  const {resourceId, regionId, operation, startTime, endTime} = state
+  const {resourceId, regionId, operation, startTime, endTime, executionId} = state
   return {
     regionId: regionId,
     resourceId: resourceId,
     startTime: startTime,
     endTime: endTime,
-    operation: operation
+    operation: operation,
+    executionId: executionId
   };
 })

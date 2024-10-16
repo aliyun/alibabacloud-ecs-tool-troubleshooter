@@ -1,0 +1,12 @@
+<div class="instance-s-container">
+  <nz-spin [nzSpinning]="loading" nzTip="获取实例屏幕快照中...">
+
+    <div *ngIf="showImage" class="instance-s-image">
+      <img [src]="img" alt="获取实例屏幕快照失败"/>
+    </div>
+
+    <div *ngIf="showError">
+      <span>获取实例屏幕快照失败,请稍后重试!</span>
+    </div>
+  </nz-spin>
+</div>
